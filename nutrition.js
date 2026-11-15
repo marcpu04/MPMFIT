@@ -180,9 +180,53 @@ window.addEventListener('load',()=>{if(typeof currentUser!=='undefined'&&current
 window.addEventListener('beforeunload',stopBarcodeCamera);
 
  
-// Búsqueda de alimentos por texto en Open Food Facts (API pública legacy de búsqueda).
+// Catálogo básico integrado para alimentos habituales sin marca.
+const nutritionCommonFoods=[
+ {name:'Arroz blanco seco',kcal:360,protein:7,carbs:80,fat:0.7},
+ {name:'Arroz blanco cocido',kcal:130,protein:2.7,carbs:28.2,fat:0.3},
+ {name:'Arroz integral seco',kcal:370,protein:7.5,carbs:77,fat:2.7},
+ {name:'Arroz integral cocido',kcal:123,protein:2.7,carbs:25.6,fat:1},
+ {name:'Pechuga de pollo cruda',kcal:120,protein:22.5,carbs:0,fat:2.6},
+ {name:'Pechuga de pollo cocinada',kcal:165,protein:31,carbs:0,fat:3.6},
+ {name:'Huevo entero',kcal:143,protein:12.6,carbs:0.7,fat:9.5},
+ {name:'Plátano',kcal:89,protein:1.1,carbs:22.8,fat:0.3},
+ {name:'Manzana',kcal:52,protein:0.3,carbs:13.8,fat:0.2},
+ {name:'Avena seca',kcal:389,protein:16.9,carbs:66.3,fat:6.9},
+ {name:'Patata cocida',kcal:87,protein:1.9,carbs:20.1,fat:0.1},
+ {name:'Pasta seca',kcal:371,protein:13,carbs:75,fat:1.5},
+ {name:'Pasta cocida',kcal:158,protein:5.8,carbs:30.9,fat:0.9},
+ {name:'Salmón crudo',kcal:208,protein:20.4,carbs:0,fat:13.4},
+ {name:'Leche entera',kcal:61,protein:3.2,carbs:4.8,fat:3.3},
+ {name:'Yogur natural entero',kcal:61,protein:3.5,carbs:4.7,fat:3.3},
+ {name:'Pan blanco',kcal:266,protein:8.9,carbs:49,fat:3.2},
+ {name:'Almendras',kcal:579,protein:21.2,carbs:21.6,fat:49.9},
+ {name:'Aceite de oliva',kcal:884,protein:0,carbs:0,fat:100}
+].map(food=>({name:food.name,brands:'MPMFIT · valores orientativos',dataSource:'Catálogo MPMFIT',nutriments:{
+ 'energy-kcal_100g':food.kcal,proteins_100g:food.protein,carbohydrates_100g:food.carbs,fat_100g:food.fat
+}}));
 let nutritionFoodSearchResults=[];
 let nutritionFoodSearchInProgress=false;
+function normalizeNutritionSearch(value){
+ return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+function renderNutritionFoodSearchResults(){
+ const results=document.getElementById('nutritionFoodSearchResults');
+ const status=document.getElementById('nutritionFoodSearchStatus');
+ if(!nutritionFoodSearchResults.length){
+  results.innerHTML='';
+  status.textContent='No hemos encontrado alimentos con información nutricional suficiente. Prueba otra búsqueda o utiliza el registro manual.';
+  return;
+ }
+ results.innerHTML=nutritionFoodSearchResults.map((p,i)=>{
+  const n=p.nutriments||{},name=p.product_name_es||p.product_name||p.generic_name||p.name||'Alimento';
+  let kcal=Number(n['energy-kcal_100g']);if(!Number.isFinite(kcal)||kcal<=0){const kj=Number(n['energy_100g']);kcal=Number.isFinite(kj)&&kj>0?kj/4.184:null}
+  const protein=Number(n.proteins_100g),carbs=Number(n.carbohydrates_100g),fat=Number(n.fat_100g);
+  const valid=v=>Number.isFinite(v)&&v>=0;
+  const details=[valid(kcal)?Math.round(kcal)+' kcal':'kcal —',valid(protein)?'P '+protein+' g':'P —',valid(carbs)?'HC '+carbs+' g':'HC —',valid(fat)?'G '+fat+' g':'G —'].join(' · ');
+  return '<div class="catalog-item"><strong>'+esc(name)+'</strong><small>'+esc(p.brands||p.dataSource||p.quantity||'Alimento')+'</small><div class="hint">'+details+' por 100 g</div><button class="btn secondary small" style="margin-top:9px" onclick="selectNutritionFood('+i+')">Seleccionar</button></div>';
+ }).join('');
+ status.textContent='Resultados encontrados: '+nutritionFoodSearchResults.length+'. Selecciona el alimento correcto. Los valores del catálogo básico son orientativos.';
+}
 async function searchNutritionFoods(){
  if(nutritionFoodSearchInProgress)return;
  const query=(document.getElementById('nutritionFoodSearch')?.value||'').trim();
@@ -193,31 +237,30 @@ async function searchNutritionFoods(){
  const button=document.getElementById('nutritionFoodSearchButton');
  if(button){button.disabled=true;button.textContent='Buscando…'}
  status.textContent='Buscando alimentos…';results.innerHTML='';
+ const normalized=normalizeNutritionSearch(query);
+ const localMatches=nutritionCommonFoods.filter(p=>normalizeNutritionSearch(p.name).includes(normalized));
  try{
   const params=new URLSearchParams({search_terms:query,search_simple:'1',action:'process',json:'1',page_size:'12',fields:'code,product_name,product_name_es,generic_name,brands,quantity,nutriments'});
   const response=await fetch('https://world.openfoodfacts.org/cgi/search.pl?'+params.toString());
-  if(!response.ok)throw new Error('No se ha podido consultar la base de alimentos.');
+  if(!response.ok)throw new Error('No se ha podido consultar la base de productos.');
   const data=await response.json();
   const products=Array.isArray(data.products)?data.products:[];
   const hasValue=value=>value!==undefined&&value!==null&&value!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
-  nutritionFoodSearchResults=products.filter(p=>{
+  const externalMatches=products.filter(p=>{
    const n=p.nutriments||{};
    const hasEnergy=hasValue(n['energy-kcal_100g'])||hasValue(n['energy_100g']);
    return (p.product_name_es||p.product_name||p.generic_name)&&hasEnergy&&
     hasValue(n.proteins_100g)&&hasValue(n.carbohydrates_100g)&&hasValue(n.fat_100g);
-  }).slice(0,12);
-  if(!nutritionFoodSearchResults.length){status.textContent='No hemos encontrado alimentos con información nutricional suficiente. Prueba otra búsqueda o utiliza el registro manual.';return}
-  status.textContent='Resultados encontrados: '+nutritionFoodSearchResults.length+'. Selecciona el alimento correcto.';
-  results.innerHTML=nutritionFoodSearchResults.map((p,i)=>{
-   const n=p.nutriments||{},name=p.product_name_es||p.product_name||p.generic_name||'Alimento';
-   let kcal=Number(n['energy-kcal_100g']);if(!Number.isFinite(kcal)||kcal<=0){const kj=Number(n['energy_100g']);kcal=Number.isFinite(kj)&&kj>0?kj/4.184:null}
-   const protein=Number(n.proteins_100g),carbs=Number(n.carbohydrates_100g),fat=Number(n.fat_100g);
-   const valid=v=>Number.isFinite(v)&&v>=0;
-   const details=[valid(kcal)?Math.round(kcal)+' kcal':'kcal —',valid(protein)?'P '+protein+' g':'P —',valid(carbs)?'HC '+carbs+' g':'HC —',valid(fat)?'G '+fat+' g':'G —'].join(' · ');
-   return '<div class="catalog-item"><strong>'+esc(name)+'</strong><small>'+esc(p.brands||p.quantity||'Alimento')+'</small><div class="hint">'+details+' por 100 g</div><button class="btn secondary small" style="margin-top:9px" onclick="selectNutritionFood('+i+')">Seleccionar</button></div>';
-  }).join('');
- }catch(error){status.textContent=error.message||'Error al buscar alimentos. Puedes introducirlo manualmente.'}
+  }).map(p=>({...p,dataSource:'Open Food Facts'}));
+  const localNames=new Set(localMatches.map(p=>normalizeNutritionSearch(p.name)));
+  nutritionFoodSearchResults=[...localMatches,...externalMatches.filter(p=>!localNames.has(normalizeNutritionSearch(p.product_name_es||p.product_name||p.generic_name)))].slice(0,12);
+ }catch(error){
+  nutritionFoodSearchResults=localMatches;
+  if(!localMatches.length){status.textContent=error.message||'Error al buscar alimentos. Puedes introducirlo manualmente.';return}
+  status.textContent='No se ha podido consultar Open Food Facts; mostramos los alimentos del catálogo integrado.';
+ }
  finally{nutritionFoodSearchInProgress=false;if(button){button.disabled=false;button.textContent='Buscar alimento'}}
+ renderNutritionFoodSearchResults();
 }
 function selectNutritionFood(index){
  const p=nutritionFoodSearchResults[index];if(!p)return;
@@ -225,7 +268,7 @@ function selectNutritionFood(index){
  let kcal=Number(n['energy-kcal_100g']);
  if(!Number.isFinite(kcal)||kcal<=0){const kj=Number(n['energy_100g']);kcal=Number.isFinite(kj)&&kj>0?kj/4.184:0}
  const protein=Number(n.proteins_100g),carbs=Number(n.carbohydrates_100g),fat=Number(n.fat_100g);
- const name=p.product_name_es||p.product_name||p.generic_name||'Alimento';
+ const name=p.product_name_es||p.product_name||p.generic_name||p.name||'Alimento';
  document.getElementById('foodName').value=name;
  document.getElementById('foodUnit').value='g';updateFoodUnitUI();
  document.getElementById('foodBasis').value='100g';
@@ -236,8 +279,9 @@ function selectNutritionFood(index){
  document.getElementById('foodFat').value=Number.isFinite(fat)?Math.max(0,fat).toFixed(1):'';
  document.getElementById('foodBarcode').value=p.code||'';
  renderFoodPreview();
- document.getElementById('barcodeResult').textContent='Alimento cargado desde la búsqueda. Revisa sus datos nutricionales y ajusta la cantidad antes de añadirlo.';
- document.getElementById('nutritionFoodSearchStatus').textContent='Seleccionado: '+name+'. Ahora indica la cantidad que has comido y pulsa «Añadir al diario».';
+ document.getElementById('barcodeResult').textContent='Alimento cargado. Revisa los valores, especialmente si son orientativos, y ajusta la cantidad antes de añadirlo.';
+ statusMessage='Seleccionado: '+name+'. Ahora indica la cantidad que has comido y pulsa «Añadir al diario».';
+ document.getElementById('nutritionFoodSearchStatus').textContent=statusMessage;
  document.getElementById('foodGrams').focus();
  document.getElementById('foodGrams').select();
 }
