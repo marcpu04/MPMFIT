@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101310">
+<title>MPMFIT — Training Log</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0b0e0c;--panel:#141a16;--panel2:#1a211c;--line:#29332c;--green:#9be66b;--green2:#b8ff83;--muted:#94a096;--text:#f0f5f0;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#1b2a1c 0,transparent 35%),var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1180px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:13px;background:var(--green);color:#10170d;display:grid;place-items:center;font-weight:1000;font-size:19px;letter-spacing:-1px}.brand strong{font-size:21px;letter-spacing:1.4px}.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:2px}.topright{display:flex;gap:10px;align-items:center}.pill{border:1px solid var(--line);border-radius:99px;padding:8px 12px;color:var(--muted);font-size:12px}.nav{display:flex;gap:8px;overflow:auto;padding:5px 0 18px;border-bottom:1px solid var(--line);margin-bottom:24px}.nav button{background:transparent;color:var(--muted);border:1px solid transparent;padding:10px 15px;border-radius:10px;white-space:nowrap}.nav button.active{background:#1c2a1d;color:var(--green);border-color:#344a32}.view{display:none}.view.active{display:block}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.heading{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:18px}.heading h1{font-size:clamp(25px,4vw,36px);margin:4px 0 0;letter-spacing:-1px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:linear-gradient(145deg,#171e19,#111612);border:1px solid var(--line);border-radius:17px;padding:18px;min-width:0}.stat{grid-column:span 3}.stat b{display:block;font-size:28px;margin-top:8px}.stat span{color:var(--muted);font-size:12px}.wide{grid-column:span 8}.side{grid-column:span 4}.full{grid-column:1/-1}.card h3{margin:0 0 12px;font-size:16px}.biggreen{color:var(--green);font-size:22px;font-weight:800}.btn{border:0;border-radius:10px;background:var(--green);color:#10170d;padding:10px 15px;font-weight:800}.btn:hover{background:var(--green2)}.btn.secondary{background:#202a22;color:var(--text);border:1px solid #354338}.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}.btn.danger{background:#351e1e;color:#ffaaaa;border:1px solid #633434}.btn.small{padding:7px 10px;font-size:12px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.stack{display:grid;gap:10px}.exercise{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:#101511;border:1px solid #253027;border-radius:12px}.exercise strong{display:block}.exercise small{color:var(--muted)}.tag{font-size:11px;color:var(--green);background:#203020;border-radius:99px;padding:4px 8px;white-space:nowrap}.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:13px}.field{display:grid;gap:5px}.field label{font-size:12px;color:var(--muted)}input,select,textarea{width:100%;background:#0d120e;color:var(--text);border:1px solid #344037;border-radius:9px;padding:10px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--green)}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.formgrid .fullfield{grid-column:1/-1}.routine-card{grid-column:span 6}.routine-card h3{font-size:19px}.setrow{display:grid;grid-template-columns:42px 1fr 1fr 1fr 40px;gap:7px;align-items:center;margin:8px 0}.setrow input{padding:8px;text-align:center}.sethead{display:grid;grid-template-columns:42px 1fr 1fr 1fr 40px;gap:7px;color:var(--muted);font-size:11px;text-align:center}.check{accent-color:var(--green);width:18px;height:18px}.exercise-block{padding:14px;border:1px solid var(--line);border-radius:13px;margin:12px 0;background:#101511}.exercise-block h3{margin:0}.history-item{padding:13px 0;border-bottom:1px solid var(--line)}.history-item:last-child{border:0}.barwrap{height:9px;background:#28332a;border-radius:20px;overflow:hidden;margin-top:8px}.bar{height:100%;background:var(--green);border-radius:20px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#10170d;padding:11px 17px;border-radius:10px;font-weight:800;display:none;z-index:10;box-shadow:0 10px 35px #0008}.modalback{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal{width:min(520px,100%);background:#151c17;border:1px solid var(--line);border-radius:17px;padding:20px;max-height:90vh;overflow:auto}.modal h2{margin:0 0 16px}.modalactions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.footer{color:#667168;font-size:11px;text-align:center;margin:30px 0 10px}.timerbox{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#101711;border:1px solid #304033;border-radius:12px;padding:12px;margin:14px 0}.timerclock{font-size:25px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;min-width:72px}.filterrow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.filterrow>*{flex:1;min-width:150px}.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.catalog-item{padding:13px;background:#101511;border:1px solid var(--line);border-radius:12px}.catalog-item strong{display:block}.catalog-item small{color:var(--muted)}.calendar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.cal-day{min-height:76px;background:#101511;border:1px solid var(--line);border-radius:9px;padding:7px;font-size:12px}.cal-day.mutedday{opacity:.35}.cal-day.today{border-color:var(--green)}.cal-day.haswork{background:#1b2b1d;border-color:#45613f}.cal-day b{display:block}.cal-day small{color:var(--green);font-size:10px}.chartbars{display:flex;align-items:end;gap:8px;height:190px;padding:12px 4px 0;border-bottom:1px solid var(--line)}.chartcol{flex:1;min-width:0;text-align:center;height:100%;display:flex;flex-direction:column;justify-content:end;gap:6px}.chartbar{width:100%;min-height:3px;background:linear-gradient(180deg,var(--green2),#4d8e3e);border-radius:6px 6px 0 0}.chartcol small{font-size:10px;color:var(--muted);white-space:nowrap}.pr-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px;border-bottom:1px solid var(--line)}.pr-item:last-child{border:0}.pr-value{color:var(--green);font-weight:900;font-size:19px;white-space:nowrap}.hint{font-size:12px;color:var(--muted);margin-top:6px}@media(max-width:600px){.catalog-grid{grid-template-columns:1fr}.cal-day{min-height:60px;padding:5px;font-size:11px}.chartbars{gap:4px}.chartcol small{font-size:9px}}
+@media(max-width:760px){.app{padding:15px}.stat{grid-column:span 6}.wide,.side{grid-column:1/-1}.routine-card{grid-column:1/-1}.topright .pill{display:none}.heading{align-items:start;flex-direction:column}.setrow,.sethead{grid-template-columns:28px 1fr 1fr 1fr 30px;gap:4px}.setrow input{padding:7px 3px;font-size:13px}.card{padding:15px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+ <div class="brand"><div class="logo">M</div><div><strong>MPMFIT</strong><small>TRAINING LOG</small></div></div>
+ <div class="topright"><span class="pill" id="syncStatus">● SIN CONECTAR</span><button class="btn secondary small" id="accountButton" onclick="openAccount()">Iniciar sesión</button><button class="btn secondary small" onclick="openBackup()">Copia de seguridad</button></div>
+</header>
+<nav class="nav">
+ <button class="active" data-view="home">▦ Inicio</button><button data-view="routines">▤ Rutinas</button><button data-view="train">＋ Entrenar</button><button data-view="library">▧ Ejercicios</button><button data-view="history">◷ Historial</button><button data-view="calendar">▦ Calendario</button><button data-view="progress">↗ Progreso</button><button data-view="records">★ Récords</button>
+</nav>
+
+<section id="home" class="view active">
+ <div class="heading"><div><div class="eyebrow">TU ESPACIO DE ENTRENAMIENTO</div><h1>Vamos a trabajar.</h1><div class="muted" id="todayText"></div></div><button class="btn" onclick="showView('train')">＋ Empezar entrenamiento</button></div>
+ <div class="grid">
+  <div class="card stat"><span>Rutinas creadas</span><b id="statRoutines">0</b><span>Planes guardados</span></div>
+  <div class="card stat"><span>Entrenamientos</span><b id="statSessions">0</b><span>Sesiones registradas</span></div>
+  <div class="card stat"><span>Ejercicios</span><b id="statExercises">0</b><span>En tus rutinas</span></div>
+  <div class="card stat"><span>Volumen total</span><b id="statVolume">0</b><span>kg acumulados</span></div>
+  <div class="card wide"><div class="row"><h3>Mis rutinas</h3><button class="btn ghost small" onclick="showView('routines')">Ver todas →</button></div><div id="homeRoutines" class="stack"></div></div>
+  <div class="card side"><h3>Último entrenamiento</h3><div id="lastSession" class="muted">Todavía no has registrado ninguna sesión.</div></div>
+  <div class="card full"><div class="row"><div><h3>Empieza por aquí</h3><div class="muted">Crea tu primera rutina y añade ejercicios, series y repeticiones.</div></div><button class="btn" onclick="openRoutineModal()">Crear rutina</button></div></div>
+ </div>
+</section>
+
+<section id="routines" class="view">
+ <div class="heading"><div><div class="eyebrow">PLANIFICACIÓN</div><h1>Mis rutinas</h1><div class="muted">Organiza tus días y ejercicios.</div></div><button class="btn" onclick="openRoutineModal()">＋ Nueva rutina</button></div>
+ <div class="grid" id="routineGrid"></div>
+</section>
+
+<section id="train" class="view">
+ <div class="heading"><div><div class="eyebrow">SESIÓN ACTUAL</div><h1>Entrenamiento</h1><div class="muted">Registra el peso y las repeticiones de cada serie.</div></div></div>
+ <div class="card">
+  <div class="formgrid">
+   <div class="field"><label>Selecciona una rutina</label><select id="trainRoutine" onchange="loadTrainingRoutine()"><option value="">Entrenamiento libre</option></select></div>
+   <div class="field"><label>Fecha</label><input id="trainDate" type="date"></div>
+  </div>
+  <div class="timerbox">
+   <div><div class="eyebrow">DESCANSO</div><div class="timerclock" id="timerClock">01:30</div></div>
+   <div class="field" style="min-width:120px"><label>Duración</label><select id="timerDuration" onchange="setTimerDuration()"><option value="60">60 segundos</option><option value="90" selected>90 segundos</option><option value="120">120 segundos</option><option value="150">150 segundos</option><option value="180">180 segundos</option></select></div>
+   <button class="btn" id="timerButton" onclick="toggleTimer()">▶ Iniciar</button>
+   <button class="btn ghost small" onclick="resetTimer()">Reiniciar</button>
+  </div>
+  <div class="hint">Al marcar una serie como completada, el descanso se inicia automáticamente.</div>
+  <div id="trainingExercises" style="margin-top:15px"></div>
+  <div class="row" style="margin-top:15px;flex-wrap:wrap"><button class="btn secondary" onclick="addFreeExercise()">＋ Añadir ejercicio</button><button class="btn" onclick="saveSession()">Guardar entrenamiento</button></div>
+ </div>
+</section>
+
+<section id="history" class="view">
+ <div class="heading"><div><div class="eyebrow">REGISTRO</div><h1>Historial</h1><div class="muted">Todas tus sesiones guardadas.</div></div></div>
+ <div class="card" id="historyList"></div>
+</section>
+
+<section id="progress" class="view">
+ <div class="heading"><div><div class="eyebrow">EVOLUCIÓN</div><h1>Tu progreso</h1><div class="muted">Consulta cómo avanzan tus cargas.</div></div></div>
+ <div class="card">
+  <div class="field" style="max-width:380px"><label>Ejercicio</label><select id="progressExercise" onchange="renderProgress()"></select></div>
+  <div id="progressContent" style="margin-top:20px"></div>
+ </div>
+</section>
+<section id="library" class="view">
+ <div class="heading"><div><div class="eyebrow">BIBLIOTECA</div><h1>Ejercicios</h1><div class="muted">Busca movimientos por nombre o grupo muscular.</div></div></div>
+ <div class="card">
+  <div class="filterrow"><input id="librarySearch" placeholder="Buscar ejercicio..." oninput="renderLibrary()"><select id="libraryMuscle" onchange="renderLibrary()"><option value="">Todos los grupos musculares</option><option>Pecho</option><option>Espalda</option><option>Hombros</option><option>Bíceps</option><option>Tríceps</option><option>Cuádriceps</option><option>Isquios</option><option>Glúteos</option><option>Pantorrillas</option><option>Abdominales</option></select></div>
+  <div id="libraryList" class="catalog-grid"></div>
+ </div>
+</section>
+<section id="calendar" class="view">
+ <div class="heading"><div><div class="eyebrow">CONSTANCIA</div><h1>Calendario</h1><div class="muted">Consulta los días en los que has entrenado.</div></div></div>
+ <div class="card">
+  <div class="calendar-head"><button class="btn ghost small" onclick="changeMonth(-1)">← Anterior</button><h3 id="calendarTitle" style="margin:0"></h3><button class="btn ghost small" onclick="changeMonth(1)">Siguiente →</button></div>
+  <div class="calendar-grid" id="calendarGrid"></div><div class="hint" style="margin-top:12px">Los días en verde tienen al menos un entrenamiento guardado.</div><div id="calendarSummary" class="hint"></div>
+ </div>
+</section>
+<section id="records" class="view">
+ <div class="heading"><div><div class="eyebrow">TUS MEJORES MARCAS</div><h1>Récords personales</h1><div class="muted">Tu mejor peso registrado en cada ejercicio.</div></div></div>
+ <div class="card" id="recordsList"></div>
+</section>
+<div class="footer">MPMFIT 2.0 · Hecho para entrenar con intención.</div>
+</div>
+<div id="authGate" style="position:fixed;inset:0;background:#080b09f2;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px">
+ <div class="card" style="width:min(440px,100%);padding:26px">
+  <div class="brand" style="margin-bottom:18px"><div class="logo">M</div><div><strong>MPMFIT</strong><small>CLOUD SYNC</small></div></div>
+  <h2 style="margin:0 0 8px">Tu entrenamiento, en todos tus dispositivos.</h2>
+  <p class="muted">Crea una cuenta o inicia sesión para sincronizar tus rutinas e historial con Supabase.</p>
+  <div class="stack">
+   <div class="field"><label>Correo electrónico</label><input id="authEmail" type="email" autocomplete="email" placeholder="tu correo"></div>
+   <div class="field"><label>Contraseña</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres"></div>
+   <button class="btn" onclick="signIn()">Iniciar sesión</button>
+   <button class="btn secondary" onclick="signUp()">Crear cuenta</button>
+   <div class="hint" id="authMessage">Usa el mismo correo y contraseña en el móvil y en el ordenador.</div>
+  </div>
+ </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modalback" id="modalback"><div class="modal" id="modal"></div></div>
+<script>
+const KEY='mpmfit_v1';
+const SUPABASE_URL='https://lytssgscurteyzgwkjvp.supabase.co';
+const SUPABASE_KEY='sb_publishable_TKAuKIfsuhOErQ5FvsF6LA_kxOGLc06';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null, cloudReady=false, saveQueue=Promise.resolve();
+let db=loadDB(), activeTraining=[], timerRemaining=90, timerInterval=null, calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+function loadDB(){try{return JSON.parse(localStorage.getItem(KEY))||{routines:[],sessions:[]}}catch(e){return{routines:[],sessions:[]}}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();if(currentUser&&cloudReady)queueCloudSave()}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
+function setAuthMessage(message){const el=document.getElementById('authMessage');if(el)el.textContent=message}
+function openAccount(){if(currentUser){if(confirm('¿Quieres cerrar sesión en este dispositivo?'))supabaseClient.auth.signOut()}else{document.getElementById('authGate').style.display='flex'}}
+async function signUp(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||password.length<6)return setAuthMessage('Introduce un correo válido y una contraseña de al menos 6 caracteres.');setAuthMessage('Creando cuenta…');const {error}=await supabaseClient.auth.signUp({email,password});if(error){setAuthMessage(error.message);return}setAuthMessage('Cuenta creada. Si Supabase te pide confirmar el correo, revisa tu bandeja de entrada y después inicia sesión.')}
+async function signIn(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||!password)return setAuthMessage('Introduce tu correo y contraseña.');setAuthMessage('Iniciando sesión…');const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){setAuthMessage(error.message);return}await activateUser(data.user)}
+async function activateUser(user){
+ currentUser=user;cloudReady=false;document.getElementById('authGate').style.display='none';
+ document.getElementById('accountButton').textContent='Cerrar sesión';setSyncStatus('● CONECTANDO…');
+ try{
+  const [{data:routines,error:re},{data:workouts,error:we}]=await Promise.all([
+   supabaseClient.from('routines').select('*').eq('user_id',user.id),
+   supabaseClient.from('workouts').select('*').eq('user_id',user.id).order('date',{ascending:false})
+  ]);
+  if(re)throw re;if(we)throw we;
+  const localHasData=db.routines.length>0||db.sessions.length>0;
+  const cloudHasData=(routines||[]).length>0||(workouts||[]).length>0;
+  if(!cloudHasData&&localHasData){
+   if(confirm('Tu cuenta en la nube está vacía, pero este dispositivo tiene datos guardados. ¿Quieres subir tus datos locales a Supabase?')){cloudReady=true;await queueCloudSave();}
+   else{db={routines:[],sessions:[]};localStorage.setItem(KEY,JSON.stringify(db));}
+  }else{
+   db={
+    routines:(routines||[]).map(r=>({id:uid(),name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]})),
+    sessions:(workouts||[]).map(w=>({id:uid(),date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}))
+   };
+   localStorage.setItem(KEY,JSON.stringify(db));
+  }
+  cloudReady=true;renderAll();setupTraining();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
+ }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
+}
+function queueCloudSave(){
+ saveQueue=saveQueue.then(async()=>{
+  if(!currentUser||!cloudReady)return;
+  setSyncStatus('● GUARDANDO…');
+  const uidUser=currentUser.id;
+  const delR=await supabaseClient.from('routines').delete().eq('user_id',uidUser);if(delR.error)throw delR.error;
+  const delW=await supabaseClient.from('workouts').delete().eq('user_id',uidUser);if(delW.error)throw delW.error;
+  if(db.routines.length){const rows=db.routines.map(r=>({user_id:uidUser,name:r.name,exercises:r.exercises}));const ins=await supabaseClient.from('routines').insert(rows);if(ins.error)throw ins.error;}
+  if(db.sessions.length){const rows=db.sessions.map(s=>({user_id:uidUser,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises}));const ins=await supabaseClient.from('workouts').insert(rows);if(ins.error)throw ins.error;}
+  setSyncStatus('● SINCRONIZADO');
+ }).catch(error=>{setSyncStatus('● ERROR AL GUARDAR');console.error(error);toast('Error de sincronización: '+(error.message||'revisa la conexión'));});
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+const EXERCISE_LIBRARY=[
+{name:'Press banca con barra',muscle:'Pecho',detail:'Empuje horizontal · controla el descenso y mantén los pies firmes'},
+{name:'Press inclinado con mancuernas',muscle:'Pecho',detail:'Énfasis clavicular · recorrido controlado'},
+{name:'Aperturas en polea',muscle:'Pecho',detail:'Aducción horizontal · evita perder tensión al cerrar'},
+{name:'Press máquina convergente',muscle:'Pecho',detail:'Empuje guiado · ajusta el asiento a la altura del pecho'},
+{name:'Dominadas',muscle:'Espalda',detail:'Tracción vertical · inicia deprimiendo las escápulas'},
+{name:'Jalón al pecho',muscle:'Espalda',detail:'Tracción vertical · lleva los codos hacia abajo'},
+{name:'Remo con barra',muscle:'Espalda',detail:'Tracción horizontal · tronco estable y espalda neutra'},
+{name:'Remo sentado en polea',muscle:'Espalda',detail:'Tracción horizontal · evita balancear el torso'},
+{name:'Pullover en polea',muscle:'Espalda',detail:'Extensión de hombro · ligera flexión de codo'},
+{name:'Press militar',muscle:'Hombros',detail:'Empuje vertical · abdomen firme y recorrido cómodo'},
+{name:'Elevaciones laterales',muscle:'Hombros',detail:'Abducción de hombro · controla la fase excéntrica'},
+{name:'Pájaros en máquina',muscle:'Hombros',detail:'Deltoide posterior · evita encoger los hombros'},
+{name:'Curl con barra',muscle:'Bíceps',detail:'Flexión de codo · evita impulsarte con la espalda'},
+{name:'Curl inclinado con mancuernas',muscle:'Bíceps',detail:'Bíceps en posición estirada · no fuerces el hombro'},
+{name:'Curl martillo',muscle:'Bíceps',detail:'Agarre neutro · controla la bajada'},
+{name:'Curl predicador',muscle:'Bíceps',detail:'Flexión apoyada · no bloquees bruscamente abajo'},
+{name:'Extensión de tríceps en polea',muscle:'Tríceps',detail:'Extensión de codo · brazos estables'},
+{name:'Extensión unilateral en polea',muscle:'Tríceps',detail:'Trabajo unilateral · rango cómodo y controlado'},
+{name:'Press cerrado',muscle:'Tríceps',detail:'Empuje compuesto · agarre cómodo y controlado'},
+{name:'Fondos asistidos',muscle:'Tríceps',detail:'Empuje vertical · usa un rango sin molestias'},
+{name:'Sentadilla',muscle:'Cuádriceps',detail:'Patrón dominante de rodilla · adapta profundidad y carga'},
+{name:'Prensa de piernas',muscle:'Cuádriceps',detail:'Empuje de piernas · controla la profundidad'},
+{name:'Extensión de cuádriceps',muscle:'Cuádriceps',detail:'Extensión de rodilla · rango tolerable y controlado'},
+{name:'Sentadilla búlgara',muscle:'Cuádriceps',detail:'Trabajo unilateral · estabilidad y rango individualizado'},
+{name:'Peso muerto rumano',muscle:'Isquios',detail:'Bisagra de cadera · columna neutra'},
+{name:'Curl femoral sentado',muscle:'Isquios',detail:'Flexión de rodilla · controla ambas fases'},
+{name:'Curl femoral tumbado',muscle:'Isquios',detail:'Flexión de rodilla · evita levantar la pelvis'},
+{name:'Hip thrust',muscle:'Glúteos',detail:'Extensión de cadera · no hiperextiendas la zona lumbar'},
+{name:'Abducción de cadera',muscle:'Glúteos',detail:'Abducción de cadera · evita balancear el tronco'},
+{name:'Elevación de gemelos de pie',muscle:'Pantorrillas',detail:'Flexión plantar · pausa arriba y abajo'},
+{name:'Elevación de gemelos sentado',muscle:'Pantorrillas',detail:'Énfasis en sóleo · recorrido controlado'},
+{name:'Crunch en polea',muscle:'Abdominales',detail:'Flexión de tronco · acerca costillas y pelvis'},
+{name:'Elevación de piernas',muscle:'Abdominales',detail:'Control pélvico · evita balancearte'}
+];
+function renderLibrary(){
+ const q=(document.getElementById('librarySearch')?.value||'').toLowerCase(),m=document.getElementById('libraryMuscle')?.value||'';
+ const list=EXERCISE_LIBRARY.filter(e=>(!m||e.muscle===m)&&(!q||(e.name+' '+e.muscle+' '+e.detail).toLowerCase().includes(q)));
+ document.getElementById('libraryList').innerHTML=list.length?list.map(e=>`<div class="catalog-item"><strong>${esc(e.name)}</strong><small>${esc(e.muscle)}</small><div class="hint">${esc(e.detail)}</div><button class="btn ghost small" style="margin-top:10px" onclick="addCatalogExercise('${e.name}','${e.muscle}')">＋ Añadir a rutina</button></div>`).join(''):'<div class="empty" style="grid-column:1/-1">No se han encontrado ejercicios.</div>';
+}
+function addCatalogExercise(name,muscle){
+ if(!db.routines.length){toast('Primero crea una rutina');showView('routines');return}
+ const options=db.routines.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
+ openModal(`<h2>Añadir a una rutina</h2><p class="muted">${esc(name)} · ${esc(muscle)}</p><div class="stack"><div class="field"><label>Rutina</label><select id="catalogRoutine">${options}</select></div><div class="formgrid"><div class="field"><label>Series</label><input id="catalogSets" type="number" min="1" max="20" value="3"></div><div class="field"><label>Repeticiones</label><input id="catalogReps" value="8-12"></div></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="confirmCatalogExercise('${name}','${muscle}')">Añadir</button></div>`);
+}
+function confirmCatalogExercise(name,muscle){
+ const r=db.routines.find(x=>x.id===document.getElementById('catalogRoutine').value);if(!r)return;
+ r.exercises.push({id:uid(),name,muscle,sets:Math.max(1,Math.min(20,Number(document.getElementById('catalogSets').value)||3)),reps:document.getElementById('catalogReps').value||'8-12'});
+ closeModal();persist();toast('Ejercicio añadido a '+r.name);
+}
+
+function toast(t){let el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',2200)}
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='train')setupTraining();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();window.scrollTo(0,0)}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modalback').style.display='flex'}
+function closeModal(){document.getElementById('modalback').style.display='none'}
+document.getElementById('modalback').addEventListener('click',e=>{if(e.target.id==='modalback')closeModal()});
+function openRoutineModal(id=null){
+ const r=db.routines.find(x=>x.id===id);
+ openModal(`<h2>${r?'Editar':'Crear'} rutina</h2><div class="stack"><div class="field"><label>Nombre del día / rutina</label><input id="rName" placeholder="Ej. PUSH, Tirón, Pierna..." value="${esc(r?.name||'')}"></div><div class="field"><label>Descripción (opcional)</label><input id="rDesc" placeholder="Ej. Pecho, hombro y tríceps" value="${esc(r?.desc||'')}"></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveRoutine('${id||''}')">Guardar rutina</button></div>`);
+}
+function saveRoutine(id){let name=document.getElementById('rName').value.trim();if(!name){toast('Escribe un nombre para la rutina');return}let desc=document.getElementById('rDesc').value.trim();if(id){let r=db.routines.find(x=>x.id===id);r.name=name;r.desc=desc}else db.routines.push({id:uid(),name,desc,exercises:[]});closeModal();persist();toast('Rutina guardada')}
+function deleteRoutine(id){if(!confirm('¿Eliminar esta rutina? Los entrenamientos ya guardados no se borrarán.'))return;db.routines=db.routines.filter(r=>r.id!==id);persist()}
+function addExerciseToRoutine(id){openModal(`<h2>Añadir ejercicio</h2><div class="stack"><div class="field"><label>Nombre del ejercicio</label><input id="eName" placeholder="Ej. Press banca"></div><div class="formgrid"><div class="field"><label>Series</label><input id="eSets" type="number" min="1" max="20" value="3"></div><div class="field"><label>Repeticiones objetivo</label><input id="eReps" placeholder="Ej. 8-12" value="8-12"></div><div class="field fullfield"><label>Grupo muscular</label><select id="eMuscle"><option>Pecho</option><option>Espalda</option><option>Hombros</option><option>Bíceps</option><option>Tríceps</option><option>Cuádriceps</option><option>Isquios</option><option>Glúteos</option><option>Pantorrillas</option><option>Abdominales</option><option>Otro</option></select></div></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveExercise('${id}')">Añadir ejercicio</button></div>`)}
+function saveExercise(id){let name=document.getElementById('eName').value.trim(),sets=Math.max(1,Math.min(20,Number(document.getElementById('eSets').value)||3)),reps=document.getElementById('eReps').value.trim()||'8-12',muscle=document.getElementById('eMuscle').value;if(!name){toast('Escribe el nombre del ejercicio');return}db.routines.find(r=>r.id===id).exercises.push({id:uid(),name,sets,reps,muscle});closeModal();persist();toast('Ejercicio añadido')}
+function removeExercise(rid,eid){let r=db.routines.find(x=>x.id===rid);r.exercises=r.exercises.filter(e=>e.id!==eid);persist()}
+function renderRoutines(){let box=document.getElementById('routineGrid');if(!db.routines.length){box.innerHTML='<div class="empty full">Todavía no tienes rutinas. Crea tu primera división de entrenamiento.</div>';return}box.innerHTML=db.routines.map(r=>`<div class="card routine-card"><div class="row"><div><div class="eyebrow">${r.exercises.length} EJERCICIOS</div><h3>${esc(r.name)}</h3><div class="muted">${esc(r.desc||'Sin descripción')}</div></div><button class="btn ghost small" onclick="openRoutineModal('${r.id}')">Editar</button></div><div class="stack" style="margin-top:14px">${r.exercises.length?r.exercises.map(e=>`<div class="exercise"><div><strong>${esc(e.name)}</strong><small>${esc(e.muscle)} · ${e.sets} series · ${esc(e.reps)} reps</small></div><button class="btn ghost small" onclick="removeExercise('${r.id}','${e.id}')">×</button></div>`).join(''):'<div class="empty">Añade el primer ejercicio.</div>'}</div><div class="row" style="margin-top:14px"><button class="btn secondary small" onclick="addExerciseToRoutine('${r.id}')">＋ Ejercicio</button><button class="btn small" onclick="startRoutine('${r.id}')">Entrenar →</button></div><div style="margin-top:10px;text-align:right"><button class="btn danger small" onclick="deleteRoutine('${r.id}')">Eliminar rutina</button></div></div>`).join('')}
+function startRoutine(id){showView('train');document.getElementById('trainRoutine').value=id;loadTrainingRoutine()}
+function setupTraining(){let s=document.getElementById('trainRoutine');let old=s.value;s.innerHTML='<option value="">Entrenamiento libre</option>'+db.routines.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');if(db.routines.some(r=>r.id===old))s.value=old;document.getElementById('trainDate').value=new Date().toISOString().slice(0,10);if(!activeTraining.length)loadTrainingRoutine()}
+function lastExerciseData(name){for(const session of db.sessions){const found=session.exercises.find(e=>e.name.toLowerCase()===name.toLowerCase());if(found)return found}return null}
+function loadTrainingRoutine(){
+ let id=document.getElementById('trainRoutine').value,r=db.routines.find(x=>x.id===id);
+ activeTraining=(r?r.exercises:[]).map(e=>{
+  const previous=lastExerciseData(e.name),oldSets=previous?.sets||[];
+  return {name:e.name,muscle:e.muscle,sets:Array.from({length:e.sets},(_,i)=>({reps:oldSets[i]?.reps??(parseInt(e.reps)||''),weight:oldSets[i]?.weight??'',rir:oldSets[i]?.rir??'',done:false}))};
+ });
+ renderTraining();
+}
+function addFreeExercise(){openModal(`<h2>Añadir ejercicio a la sesión</h2><div class="stack"><div class="field"><label>Ejercicio</label><input id="freeName" placeholder="Ej. Curl bíceps mancuerna"></div><div class="formgrid"><div class="field"><label>Series</label><input id="freeSets" type="number" value="3" min="1" max="20"></div><div class="field"><label>Repeticiones</label><input id="freeReps" value="10"></div><div class="field fullfield"><label>Grupo muscular</label><input id="freeMuscle" placeholder="Ej. Bíceps"></div></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveFreeExercise()">Añadir</button></div>`)}
+function saveFreeExercise(){let name=document.getElementById('freeName').value.trim();if(!name)return toast('Escribe el ejercicio');let n=Math.max(1,Math.min(20,Number(document.getElementById('freeSets').value)||3)),reps=document.getElementById('freeReps').value;activeTraining.push({name,muscle:document.getElementById('freeMuscle').value||'—',sets:Array.from({length:n},()=>({reps,weight:'',rir:'',done:false}))});closeModal();renderTraining()}
+function renderTraining(){
+ let box=document.getElementById('trainingExercises');
+ if(!activeTraining.length){box.innerHTML='<div class="empty">Selecciona una rutina o añade un ejercicio para comenzar.</div>';return}
+ box.innerHTML=activeTraining.map((e,i)=>{
+  const prev=lastExerciseData(e.name),prevDate=prev?db.sessions.find(s=>s.exercises.includes(prev))?.date:null;
+  const note=prev?`Última vez: ${prevDate?new Date(prevDate+'T12:00:00').toLocaleDateString('es-ES'):'sesión anterior'} · ${prev.sets.map(s=>`${s.weight||'—'} kg × ${s.reps||'—'}`).join(' / ')}`:'Sin registros anteriores de este ejercicio';
+  return `<div class="exercise-block"><div class="row"><div><h3>${esc(e.name)}</h3><small class="muted">${esc(e.muscle||'')}</small><div class="hint">${esc(note)}</div></div><button class="btn ghost small" onclick="removeTrainingExercise(${i})">Quitar</button></div><div class="sethead" style="margin-top:12px"><span>Serie</span><span>Reps</span><span>Kg</span><span>RIR</span><span>✓</span></div>${e.sets.map((s,j)=>`<div class="setrow"><span style="text-align:center;color:var(--muted)">${j+1}</span><input aria-label="Repeticiones" type="number" min="0" placeholder="Reps" value="${esc(s.reps)}" onchange="updateSet(${i},${j},'reps',this.value)"><input aria-label="Peso" type="number" min="0" step=".5" placeholder="Kg" value="${esc(s.weight)}" onchange="updateSet(${i},${j},'weight',this.value)"><input aria-label="RIR" type="number" min="0" max="10" placeholder="RIR" value="${esc(s.rir)}" onchange="updateSet(${i},${j},'rir',this.value)"><input class="check" type="checkbox" ${s.done?'checked':''} onchange="updateSet(${i},${j},'done',this.checked)"></div>`).join('')}<button class="btn ghost small" style="margin-top:8px" onclick="addSet(${i})">＋ Añadir serie</button></div>`;
+ }).join('');
+}
+function updateSet(i,j,k,v){activeTraining[i].sets[j][k]=v;if(k==='done'&&v)startTimer()}
+function formatTimer(){const m=Math.floor(timerRemaining/60),s=timerRemaining%60;document.getElementById('timerClock').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+function setTimerDuration(){timerRemaining=Number(document.getElementById('timerDuration').value)||90;stopTimer();formatTimer()}
+function startTimer(){stopTimer();if(timerRemaining<=0)timerRemaining=Number(document.getElementById('timerDuration').value)||90;formatTimer();document.getElementById('timerButton').textContent='Ⅱ Pausar';timerInterval=setInterval(()=>{timerRemaining--;formatTimer();if(timerRemaining<=0){stopTimer();timerRemaining=0;formatTimer();document.getElementById('timerButton').textContent='▶ Iniciar';toast('¡Descanso terminado!');try{if(navigator.vibrate)navigator.vibrate([180,80,180])}catch(e){}}},1000)}
+function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null}const b=document.getElementById('timerButton');if(b)b.textContent='▶ Iniciar'}
+function toggleTimer(){if(timerInterval)stopTimer();else startTimer()}
+function resetTimer(){stopTimer();timerRemaining=Number(document.getElementById('timerDuration').value)||90;formatTimer()}
+function addSet(i){activeTraining[i].sets.push({reps:'',weight:'',rir:'',done:false});renderTraining()}
+function removeTrainingExercise(i){activeTraining.splice(i,1);renderTraining()}
+function saveSession(){let exercises=activeTraining.map(e=>({...e,sets:e.sets.map(s=>({...s}))})).filter(e=>e.name);if(!exercises.length)return toast('Añade al menos un ejercicio');let date=document.getElementById('trainDate').value||new Date().toISOString().slice(0,10);db.sessions.unshift({id:uid(),date,routine:db.routines.find(r=>r.id===document.getElementById('trainRoutine').value)?.name||'Entrenamiento libre',exercises});persist();activeTraining=[];document.getElementById('trainRoutine').value='';renderTraining();toast('Entrenamiento guardado')}
+function renderHistory(){let box=document.getElementById('historyList');if(!db.sessions.length){box.innerHTML='<div class="empty">Todavía no hay sesiones registradas.</div>';return}box.innerHTML=db.sessions.map(s=>`<div class="history-item"><div class="row"><div><strong>${esc(s.routine)}</strong><div class="muted">${new Date(s.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})} · ${s.exercises.length} ejercicios</div></div><button class="btn danger small" onclick="deleteSession('${s.id}')">Eliminar</button></div><div class="muted" style="margin-top:8px">${s.exercises.map(e=>`${esc(e.name)} (${e.sets.length} series)`).join(' · ')}</div></div>`).join('')}
+function deleteSession(id){if(!confirm('¿Eliminar esta sesión del historial?'))return;db.sessions=db.sessions.filter(s=>s.id!==id);persist();renderHistory()}
+function totalVolume(){return db.sessions.reduce((sum,s)=>sum+s.exercises.reduce((a,e)=>a+e.sets.reduce((b,x)=>b+(Number(x.weight)||0)*(Number(x.reps)||0),0),0),0)}
+function setupProgress(){let names=[...new Set(db.sessions.flatMap(s=>s.exercises.map(e=>e.name)))];let sel=document.getElementById('progressExercise'),old=sel.value;sel.innerHTML=names.length?names.map(n=>`<option>${esc(n)}</option>`).join(''):'<option value="">Aún no hay ejercicios</option>';if(names.includes(old))sel.value=old;renderProgress()}
+function renderProgress(){
+ let name=document.getElementById('progressExercise').value,box=document.getElementById('progressContent');
+ const weekly=weeklyVolumeData();
+ const chart=weekly.length?`<div style="margin:22px 0 28px"><h3>Volumen semanal</h3><div class="muted">Kilogramos × repeticiones registrados por semana</div><div class="chartbars">${weekly.map(w=>`<div class="chartcol"><div class="chartbar" title="${Math.round(w.volume).toLocaleString('es-ES')} kg" style="height:${Math.max(3,w.volume/Math.max(...weekly.map(x=>x.volume),1)*100)}%"></div><small>${esc(w.label)}</small></div>`).join('')}</div></div>`:'';
+if(!name){box.innerHTML=chart+'<div class="empty">Registra entrenamientos para empezar a ver tu evolución.</div>';return}let data=[];db.sessions.slice().reverse().forEach(s=>s.exercises.filter(e=>e.name===name).forEach(e=>{let max=Math.max(0,...e.sets.map(x=>Number(x.weight)||0));if(max)data.push({date:s.date,max})}));if(!data.length){box.innerHTML=chart+'<div class="empty">Todavía no hay pesos registrados para este ejercicio.</div>';return}let maxAll=Math.max(...data.map(x=>x.max));box.innerHTML=chart+`<div class="biggreen">${maxAll} kg</div><div class="muted">Mayor peso registrado · ${esc(name)}</div><div style="margin-top:20px">${data.map(d=>`<div style="margin:13px 0"><div class="row"><span>${new Date(d.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'})}</span><strong>${d.max} kg</strong></div><div class="barwrap"><div class="bar" style="width:${Math.max(3,d.max/maxAll*100)}%"></div></div></div>`).join('')}</div>`}
+function weeklyVolumeData(){
+ const map={};
+ db.sessions.forEach(s=>{
+  const d=new Date(s.date+'T12:00:00'),day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);
+  const key=d.toISOString().slice(0,10);
+  const volume=s.exercises.reduce((sum,e)=>sum+e.sets.reduce((a,x)=>a+(Number(x.weight)||0)*(Number(x.reps)||0),0),0);
+  map[key]=(map[key]||0)+volume;
+ });
+ return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).slice(-8).map(([key,volume])=>({volume,label:new Date(key+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}));
+}
+function renderCalendar(){
+ const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
+ document.getElementById('calendarTitle').textContent=calendarMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+ const counts={};db.sessions.forEach(s=>{counts[s.date]=(counts[s.date]||0)+1});
+ const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),prevDays=new Date(y,m,0).getDate();
+ const cells=[];['L','M','X','J','V','S','D'].forEach(d=>cells.push(`<div class="hint" style="text-align:center;font-weight:800">${d}</div>`));
+ for(let i=0;i<42;i++){
+  let day,month=m,year=y,muted=false;
+  if(i<offset){day=prevDays-offset+i+1;month=m-1;muted=true}else if(i>=offset+days){day=i-offset-days+1;month=m+1;muted=true}else day=i-offset+1;
+  const date=new Date(year,month,day),key=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  const count=counts[key]||0,today=key===new Date().toISOString().slice(0,10);
+  cells.push(`<div class="cal-day ${muted?'mutedday':''} ${count?'haswork':''} ${today?'today':''}"><b>${day}</b>${count?`<small>${count} entreno${count>1?'s':''}</small>`:''}</div>`);
+ }
+ document.getElementById('calendarGrid').innerHTML=cells.join('');
+ const monthSessions=db.sessions.filter(s=>{const d=new Date(s.date+'T12:00:00');return d.getFullYear()===y&&d.getMonth()===m});
+ const activeDays=new Set(monthSessions.map(s=>s.date)).size;
+ document.getElementById('calendarSummary').textContent=`Este mes: ${monthSessions.length} entrenamientos en ${activeDays} días distintos.`;
+}
+function changeMonth(delta){calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+delta,1);renderCalendar()}
+function renderRecords(){
+ const best={};
+ db.sessions.forEach(s=>s.exercises.forEach(e=>e.sets.forEach(set=>{
+  const w=Number(set.weight)||0;if(w>0&&(!best[e.name]||w>best[e.name].weight))best[e.name]={weight:w,reps:set.reps||'—',date:s.date};
+ })));
+ const items=Object.entries(best).sort((a,b)=>a[0].localeCompare(b[0]));
+ document.getElementById('recordsList').innerHTML=items.length?items.map(([name,v])=>`<div class="pr-item"><div><strong>${esc(name)}</strong><div class="hint">${new Date(v.date+'T12:00:00').toLocaleDateString('es-ES')} · ${esc(v.reps)} reps</div></div><div class="pr-value">${v.weight} kg</div></div>`).join(''):'<div class="empty">Aún no hay récords. Guarda entrenamientos con pesos para que aparezcan aquí.</div>';
+}
+function renderHome(){document.getElementById('statRoutines').textContent=db.routines.length;document.getElementById('statSessions').textContent=db.sessions.length;document.getElementById('statExercises').textContent=db.routines.reduce((a,r)=>a+r.exercises.length,0);document.getElementById('statVolume').textContent=Math.round(totalVolume()).toLocaleString('es-ES');let hr=document.getElementById('homeRoutines');hr.innerHTML=db.routines.length?db.routines.slice(0,5).map(r=>`<div class="exercise"><div><strong>${esc(r.name)}</strong><small>${r.exercises.length} ejercicios · ${esc(r.desc||'')}</small></div><button class="btn secondary small" onclick="startRoutine('${r.id}')">Entrenar</button></div>`).join(''):'<div class="empty">Aún no has creado ninguna rutina.</div>';let last=db.sessions[0];document.getElementById('lastSession').innerHTML=last?`<div class="biggreen">${esc(last.routine)}</div><div class="muted">${new Date(last.date+'T12:00:00').toLocaleDateString('es-ES')} · ${last.exercises.length} ejercicios</div>`:'Todavía no has registrado ninguna sesión.'}
+function renderAll(){renderRoutines();renderHome();renderHistory();if(document.getElementById('progress').classList.contains('active'))setupProgress();if(document.getElementById('records')?.classList.contains('active'))renderRecords();if(document.getElementById('calendar')?.classList.contains('active'))renderCalendar()}
+function openBackup(){openModal(`<h2>Copia de seguridad</h2><p class="muted">Tus datos se guardan en este navegador. Exporta un archivo para conservar una copia o importarlo más adelante.</p><div class="stack"><button class="btn" onclick="exportData()">↓ Exportar mis datos (.json)</button><div class="field"><label>Importar una copia JSON</label><input id="importFile" type="file" accept=".json,application/json"></div><button class="btn secondary" onclick="importData()">Importar copia</button></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cerrar</button></div>`)}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MPMFIT-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('Copia exportada')}
+function importData(){let f=document.getElementById('importFile').files[0];if(!f)return toast('Selecciona un archivo');let reader=new FileReader();reader.onload=()=>{try{let d=JSON.parse(reader.result);if(!Array.isArray(d.routines)||!Array.isArray(d.sessions))throw Error();if(!confirm('Esto sustituirá los datos actuales. ¿Continuar?'))return;db=d;persist();closeModal();toast('Copia importada')}catch(e){toast('El archivo no parece una copia válida de MPMFIT')}};reader.readAsText(f)}
+document.getElementById('todayText').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+renderAll();setupTraining();formatTimer();
+(async()=>{
+ const {data:{session}}=await supabaseClient.auth.getSession();
+ if(session?.user)await activateUser(session.user);
+ else{document.getElementById('authGate').style.display='flex';setSyncStatus('● SIN CONECTAR')}
+ supabaseClient.auth.onAuthStateChange((event)=>{
+  if(event==='SIGNED_OUT'){currentUser=null;cloudReady=false;document.getElementById('authGate').style.display='flex';document.getElementById('accountButton').textContent='Iniciar sesión';setSyncStatus('● SIN CONECTAR')}
+ });
+})();
+</script>
+</body>
+</html>
