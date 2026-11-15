@@ -199,13 +199,13 @@ async function searchNutritionFoods(){
   if(!response.ok)throw new Error('No se ha podido consultar la base de alimentos.');
   const data=await response.json();
   const products=Array.isArray(data.products)?data.products:[];
-  nutritionFoodSearchResults=products.filter(p=>(p.product_name_es||p.product_name||p.generic_name)&&p.nutriments&&(
-   Number.isFinite(Number(p.nutriments['energy-kcal_100g']))||
-   Number.isFinite(Number(p.nutriments['energy_100g']))||
-   Number.isFinite(Number(p.nutriments.proteins_100g))||
-   Number.isFinite(Number(p.nutriments.carbohydrates_100g))||
-   Number.isFinite(Number(p.nutriments.fat_100g))
-  )).slice(0,12);
+  const hasValue=value=>value!==undefined&&value!==null&&value!==''&&Number.isFinite(Number(value))&&Number(value)>=0;
+  nutritionFoodSearchResults=products.filter(p=>{
+   const n=p.nutriments||{};
+   const hasEnergy=hasValue(n['energy-kcal_100g'])||hasValue(n['energy_100g']);
+   return (p.product_name_es||p.product_name||p.generic_name)&&hasEnergy&&
+    hasValue(n.proteins_100g)&&hasValue(n.carbohydrates_100g)&&hasValue(n.fat_100g);
+  }).slice(0,12);
   if(!nutritionFoodSearchResults.length){status.textContent='No hemos encontrado alimentos con información nutricional suficiente. Prueba otra búsqueda o utiliza el registro manual.';return}
   status.textContent='Resultados encontrados: '+nutritionFoodSearchResults.length+'. Selecciona el alimento correcto.';
   results.innerHTML=nutritionFoodSearchResults.map((p,i)=>{
