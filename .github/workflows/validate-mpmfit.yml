@@ -1,3 +1,4 @@
+# Checks inline app code and the standalone Nutrition module.
 name: Validate MPMFIT
 
 on:
