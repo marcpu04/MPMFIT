@@ -110,14 +110,25 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 <div class="modalback" id="modalback"><div class="modal" id="modal"></div></div>
 <script>
 const KEY='mpmfit_v1';
+const ACCOUNT_KEY_PREFIX='mpmfit_v1_user_';
+const PENDING_DELETE_PREFIX='mpmfit_v1_pending_deletes_';
+const LEGACY_OWNER_KEY='mpmfit_v1_legacy_owner';
 const SUPABASE_URL='https://lytssgscurteyzgwkjvp.supabase.co';
 const SUPABASE_KEY='sb_publishable_TKAuKIfsuhOErQ5FvsF6LA_kxOGLc06';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null, cloudReady=false, saveQueue=Promise.resolve();
-let db=loadDB(), activeTraining=[], timerRemaining=90, timerInterval=null, calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
-function loadDB(){try{return JSON.parse(localStorage.getItem(KEY))||{routines:[],sessions:[]}}catch(e){return{routines:[],sessions:[]}}}
-function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();if(currentUser&&cloudReady)queueCloudSave()}
+let db=loadDB(KEY), activeTraining=[], timerRemaining=90, timerInterval=null, calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+function emptyDB(){return {routines:[],sessions:[]}}
+function loadDB(key){try{const value=JSON.parse(localStorage.getItem(key));return value&&Array.isArray(value.routines)&&Array.isArray(value.sessions)?value:emptyDB()}catch(e){return emptyDB()}}
+function storageKey(){return currentUser?ACCOUNT_KEY_PREFIX+currentUser.id:KEY+'_guest'}
+function pendingDeleteKey(){return PENDING_DELETE_PREFIX+(currentUser?.id||'guest')}
+function loadPendingDeletes(){try{return JSON.parse(localStorage.getItem(pendingDeleteKey()))||{routines:[],workouts:[]}}catch(e){return {routines:[],workouts:[]}}}
+function persistPendingDeletes(value){localStorage.setItem(pendingDeleteKey(),JSON.stringify(value))}
+function persist(){localStorage.setItem(storageKey(),JSON.stringify(db));renderAll();if(currentUser&&cloudReady)queueCloudSave()}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function cloudId(){return crypto.randomUUID()}
+function ensureCloudIds(){db.routines.forEach(r=>{if(!r.cloud_id)r.cloud_id=cloudId()});db.sessions.forEach(s=>{if(!s.cloud_id)s.cloud_id=cloudId()});localStorage.setItem(storageKey(),JSON.stringify(db))}
+function addPendingDelete(table,id){if(!id)return;const pending=loadPendingDeletes();if(!pending[table].includes(id))pending[table].push(id);persistPendingDeletes(pending)}
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
 function setAuthMessage(message){const el=document.getElementById('authMessage');if(el)el.textContent=message}
 function openAccount(){if(currentUser){if(confirm('¿Quieres cerrar sesión en este dispositivo?'))supabaseClient.auth.signOut()}else{document.getElementById('authGate').style.display='flex'}}
@@ -127,24 +138,40 @@ async function activateUser(user){
  currentUser=user;cloudReady=false;document.getElementById('authGate').style.display='none';
  document.getElementById('accountButton').textContent='Cerrar sesión';setSyncStatus('● CONECTANDO…');
  try{
+  const accountKey=ACCOUNT_KEY_PREFIX+user.id;
+  if(localStorage.getItem(accountKey)){
+   db=loadDB(accountKey);
+  }else{
+   const legacyOwner=localStorage.getItem(LEGACY_OWNER_KEY);
+   const legacy=loadDB(KEY);
+   const legacyHasData=legacy.routines.length>0||legacy.sessions.length>0;
+   if(legacyHasData&&(!legacyOwner||legacyOwner===user.id)){
+    const importLegacy=confirm('Hemos encontrado datos guardados en este navegador de una versión anterior de MPMFIT. ¿Son tuyos y quieres asociarlos a esta cuenta? Si no estás seguro, elige Cancelar.');
+    if(importLegacy)db=legacy;else db=emptyDB();
+    if(!legacyOwner)localStorage.setItem(LEGACY_OWNER_KEY,user.id);
+   }else db=emptyDB();
+   localStorage.setItem(accountKey,JSON.stringify(db));
+  }
   const [{data:routines,error:re},{data:workouts,error:we}]=await Promise.all([
    supabaseClient.from('routines').select('*').eq('user_id',user.id),
    supabaseClient.from('workouts').select('*').eq('user_id',user.id).order('date',{ascending:false})
   ]);
   if(re)throw re;if(we)throw we;
-  const localHasData=db.routines.length>0||db.sessions.length>0;
-  const cloudHasData=(routines||[]).length>0||(workouts||[]).length>0;
-  if(!cloudHasData&&localHasData){
-   if(confirm('Tu cuenta en la nube está vacía, pero este dispositivo tiene datos guardados. ¿Quieres subir tus datos locales a Supabase?')){cloudReady=true;await queueCloudSave();}
-   else{db={routines:[],sessions:[]};localStorage.setItem(KEY,JSON.stringify(db));}
-  }else{
-   db={
-    routines:(routines||[]).map(r=>({id:uid(),name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]})),
-    sessions:(workouts||[]).map(w=>({id:uid(),date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}))
-   };
-   localStorage.setItem(KEY,JSON.stringify(db));
-  }
-  cloudReady=true;renderAll();setupTraining();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
+  const pending=loadPendingDeletes();
+  const remoteRoutines=(routines||[]).filter(r=>!pending.routines.includes(r.id)).map(r=>({id:uid(),cloud_id:r.id,name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]}));
+  const remoteSessions=(workouts||[]).filter(w=>!pending.workouts.includes(w.id)).map(w=>({id:uid(),cloud_id:w.id,date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}));
+  const mergeByCloudId=(localRows,remoteRows)=>{
+   const merged=localRows.slice();
+   const known=new Set(merged.map(x=>x.cloud_id).filter(Boolean));
+   remoteRows.forEach(remote=>{if(!known.has(remote.cloud_id))merged.push(remote)});
+   return merged;
+  };
+  db.routines=mergeByCloudId(db.routines,remoteRoutines);
+  db.sessions=mergeByCloudId(db.sessions,remoteSessions);
+  localStorage.setItem(accountKey,JSON.stringify(db));
+  cloudReady=true;
+  await queueCloudSave();
+  renderAll();setupTraining();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
 }
 function queueCloudSave(){
@@ -152,10 +179,25 @@ function queueCloudSave(){
   if(!currentUser||!cloudReady)return;
   setSyncStatus('● GUARDANDO…');
   const uidUser=currentUser.id;
-  const delR=await supabaseClient.from('routines').delete().eq('user_id',uidUser);if(delR.error)throw delR.error;
-  const delW=await supabaseClient.from('workouts').delete().eq('user_id',uidUser);if(delW.error)throw delW.error;
-  if(db.routines.length){const rows=db.routines.map(r=>({user_id:uidUser,name:r.name,exercises:r.exercises}));const ins=await supabaseClient.from('routines').insert(rows);if(ins.error)throw ins.error;}
-  if(db.sessions.length){const rows=db.sessions.map(s=>({user_id:uidUser,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises}));const ins=await supabaseClient.from('workouts').insert(rows);if(ins.error)throw ins.error;}
+  const pending=loadPendingDeletes();
+  for(const [table,ids] of Object.entries(pending)){
+   if(!ids.length)continue;
+   const result=await supabaseClient.from(table).delete().eq('user_id',uidUser).in('id',ids);
+   if(result.error)throw result.error;
+   pending[table]=[];
+   persistPendingDeletes(pending);
+  }
+  ensureCloudIds();
+  if(db.routines.length){
+   const rows=db.routines.map(r=>({id:r.cloud_id,user_id:uidUser,name:r.name,exercises:r.exercises}));
+   const result=await supabaseClient.from('routines').upsert(rows,{onConflict:'id'});
+   if(result.error)throw result.error;
+  }
+  if(db.sessions.length){
+   const rows=db.sessions.map(s=>({id:s.cloud_id,user_id:uidUser,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises}));
+   const result=await supabaseClient.from('workouts').upsert(rows,{onConflict:'id'});
+   if(result.error)throw result.error;
+  }
   setSyncStatus('● SINCRONIZADO');
  }).catch(error=>{setSyncStatus('● ERROR AL GUARDAR');console.error(error);toast('Error de sincronización: '+(error.message||'revisa la conexión'));});
 }
@@ -223,7 +265,7 @@ function openRoutineModal(id=null){
  openModal(`<h2>${r?'Editar':'Crear'} rutina</h2><div class="stack"><div class="field"><label>Nombre del día / rutina</label><input id="rName" placeholder="Ej. PUSH, Tirón, Pierna..." value="${esc(r?.name||'')}"></div><div class="field"><label>Descripción (opcional)</label><input id="rDesc" placeholder="Ej. Pecho, hombro y tríceps" value="${esc(r?.desc||'')}"></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveRoutine('${id||''}')">Guardar rutina</button></div>`);
 }
 function saveRoutine(id){let name=document.getElementById('rName').value.trim();if(!name){toast('Escribe un nombre para la rutina');return}let desc=document.getElementById('rDesc').value.trim();if(id){let r=db.routines.find(x=>x.id===id);r.name=name;r.desc=desc}else db.routines.push({id:uid(),name,desc,exercises:[]});closeModal();persist();toast('Rutina guardada')}
-function deleteRoutine(id){if(!confirm('¿Eliminar esta rutina? Los entrenamientos ya guardados no se borrarán.'))return;db.routines=db.routines.filter(r=>r.id!==id);persist()}
+function deleteRoutine(id){if(!confirm('¿Eliminar esta rutina? Los entrenamientos ya guardados no se borrarán.'))return;const routine=db.routines.find(r=>r.id===id);if(routine?.cloud_id)addPendingDelete('routines',routine.cloud_id);db.routines=db.routines.filter(r=>r.id!==id);persist()}
 function addExerciseToRoutine(id){openModal(`<h2>Añadir ejercicio</h2><div class="stack"><div class="field"><label>Nombre del ejercicio</label><input id="eName" placeholder="Ej. Press banca"></div><div class="formgrid"><div class="field"><label>Series</label><input id="eSets" type="number" min="1" max="20" value="3"></div><div class="field"><label>Repeticiones objetivo</label><input id="eReps" placeholder="Ej. 8-12" value="8-12"></div><div class="field fullfield"><label>Grupo muscular</label><select id="eMuscle"><option>Pecho</option><option>Espalda</option><option>Hombros</option><option>Bíceps</option><option>Tríceps</option><option>Cuádriceps</option><option>Isquios</option><option>Glúteos</option><option>Pantorrillas</option><option>Abdominales</option><option>Otro</option></select></div></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveExercise('${id}')">Añadir ejercicio</button></div>`)}
 function saveExercise(id){let name=document.getElementById('eName').value.trim(),sets=Math.max(1,Math.min(20,Number(document.getElementById('eSets').value)||3)),reps=document.getElementById('eReps').value.trim()||'8-12',muscle=document.getElementById('eMuscle').value;if(!name){toast('Escribe el nombre del ejercicio');return}db.routines.find(r=>r.id===id).exercises.push({id:uid(),name,sets,reps,muscle});closeModal();persist();toast('Ejercicio añadido')}
 function removeExercise(rid,eid){let r=db.routines.find(x=>x.id===rid);r.exercises=r.exercises.filter(e=>e.id!==eid);persist()}
@@ -261,7 +303,7 @@ function addSet(i){activeTraining[i].sets.push({reps:'',weight:'',rir:'',done:fa
 function removeTrainingExercise(i){activeTraining.splice(i,1);renderTraining()}
 function saveSession(){let exercises=activeTraining.map(e=>({...e,sets:e.sets.map(s=>({...s}))})).filter(e=>e.name);if(!exercises.length)return toast('Añade al menos un ejercicio');let date=document.getElementById('trainDate').value||new Date().toISOString().slice(0,10);db.sessions.unshift({id:uid(),date,routine:db.routines.find(r=>r.id===document.getElementById('trainRoutine').value)?.name||'Entrenamiento libre',exercises});persist();activeTraining=[];document.getElementById('trainRoutine').value='';renderTraining();toast('Entrenamiento guardado')}
 function renderHistory(){let box=document.getElementById('historyList');if(!db.sessions.length){box.innerHTML='<div class="empty">Todavía no hay sesiones registradas.</div>';return}box.innerHTML=db.sessions.map(s=>`<div class="history-item"><div class="row"><div><strong>${esc(s.routine)}</strong><div class="muted">${new Date(s.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})} · ${s.exercises.length} ejercicios</div></div><button class="btn danger small" onclick="deleteSession('${s.id}')">Eliminar</button></div><div class="muted" style="margin-top:8px">${s.exercises.map(e=>`${esc(e.name)} (${e.sets.length} series)`).join(' · ')}</div></div>`).join('')}
-function deleteSession(id){if(!confirm('¿Eliminar esta sesión del historial?'))return;db.sessions=db.sessions.filter(s=>s.id!==id);persist();renderHistory()}
+function deleteSession(id){if(!confirm('¿Eliminar esta sesión del historial?'))return;const session=db.sessions.find(s=>s.id===id);if(session?.cloud_id)addPendingDelete('workouts',session.cloud_id);db.sessions=db.sessions.filter(s=>s.id!==id);persist();renderHistory()}
 function totalVolume(){return db.sessions.reduce((sum,s)=>sum+s.exercises.reduce((a,e)=>a+e.sets.reduce((b,x)=>b+(Number(x.weight)||0)*(Number(x.reps)||0),0),0),0)}
 function setupProgress(){let names=[...new Set(db.sessions.flatMap(s=>s.exercises.map(e=>e.name)))];let sel=document.getElementById('progressExercise'),old=sel.value;sel.innerHTML=names.length?names.map(n=>`<option>${esc(n)}</option>`).join(''):'<option value="">Aún no hay ejercicios</option>';if(names.includes(old))sel.value=old;renderProgress()}
 function renderProgress(){
