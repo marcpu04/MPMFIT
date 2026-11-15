@@ -111,12 +111,15 @@
       }
       if(meta.dirty){
         if(meta.updatedAt!==remote.updated_at){
-          setStatus('● CONFLICTO DE DATOS');
-          if(typeof toast==='function')toast('Hay cambios en otro dispositivo. Tus datos locales se conservan; no se ha sobrescrito nada.');
-          return;
+          const merged=mergeState(remote,local);
+          const updatedAt=await writeRemote(uid,merged,remote.updated_at);
+          saveLocal(merged);
+          localStorage.setItem(metaKey(),JSON.stringify({updatedAt,dirty:false}));
+          if(typeof toast==='function')toast('Se han combinado los cambios de ambos dispositivos.');
+        }else{
+          const updatedAt=await writeRemote(uid,local,remote.updated_at);
+          localStorage.setItem(metaKey(),JSON.stringify({updatedAt,dirty:false}));
         }
-        const updatedAt=await writeRemote(uid,local,remote.updated_at);
-        localStorage.setItem(metaKey(),JSON.stringify({updatedAt,dirty:false}));
       }else if(meta.updatedAt!==remote.updated_at){
         saveLocal(remote);localStorage.setItem(metaKey(),JSON.stringify({updatedAt:remote.updated_at,dirty:false}));
       }
