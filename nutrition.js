@@ -21,7 +21,7 @@ function nutritionProgress(label,value,target,unit){
  const pct=target>0?Math.min(100,value/target*100):0;
  return '<div class="card stat"><span>'+label+'</span><b>'+Math.round(value*10)/10+' <small>'+unit+'</small></b><span>'+(target>0?'Objetivo: '+target+' '+unit:'Objetivo sin configurar')+'</span><div class="barwrap"><div class="bar" style="width:'+pct+'%"></div></div></div>';
 }
-function nutritionTargetCard(label,value,unit){return '<div class="card stat"><span>'+label+'</span><b>'+(value||'—')+' <small>'+unit+'</small></b><span>Objetivo diario</span></div>}
+function nutritionTargetCard(label,value,unit){return '<div class="card stat"><span>'+label+'</span><b>'+(value||'—')+' <small>'+unit+'</small></b><span>Objetivo diario</span></div>'}
 function renderNutrition(){
  if(!document.getElementById('nutritionDate'))return;
  if(!document.getElementById('nutritionDate').value)document.getElementById('nutritionDate').value=new Date().toISOString().slice(0,10);
