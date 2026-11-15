@@ -21,11 +21,11 @@ function nutritionProgress(label,value,target,unit){
  const pct=target>0?Math.min(100,value/target*100):0;
  return '<div class="card stat"><span>'+label+'</span><b>'+Math.round(value*10)/10+' <small>'+unit+'</small></b><span>'+(target>0?'Objetivo: '+target+' '+unit:'Objetivo sin configurar')+'</span><div class="barwrap"><div class="bar" style="width:'+pct+'%"></div></div></div>';
 }
-function renderNutrition(){
+function nutritionTargetCard(label,value,unit){return '<div class="card stat"><span>'+label+'</span><b>'+(value||'—')+' <small>'+unit+'</small></b><span>Objetivo diario</span></div>\nfunction renderNutrition(){
  if(!document.getElementById('nutritionDate'))return;
  if(!document.getElementById('nutritionDate').value)document.getElementById('nutritionDate').value=new Date().toISOString().slice(0,10);
  const t=nutritionData.targets||{},goal=document.getElementById('nutritionGoalsView');
- goal.innerHTML='<div class="card stat"><span>Objetivo</span><b style="font-size:20px">'+nutritionGoalName(nutritionData.goal)+'</b></div>'+nutritionProgress('Calorías',t.kcal||0,t.kcal||0,'kcal')+nutritionProgress('Proteínas',t.protein||0,t.protein||0,'g')+nutritionProgress('Hidratos',t.carbs||0,t.carbs||0,'g')+nutritionProgress('Grasas',t.fat||0,t.fat||0,'g');
+ goal.innerHTML='<div class="card stat"><span>Objetivo</span><b style="font-size:20px">'+nutritionGoalName(nutritionData.goal)+'</b></div>'+nutritionTargetCard('Calorías',t.kcal,'kcal')+nutritionTargetCard('Proteínas',t.protein,'g')+nutritionTargetCard('Hidratos',t.carbs,'g')+nutritionTargetCard('Grasas',t.fat,'g');
  const totals=nutritionTotals(nutritionToday());
  document.getElementById('nutritionSummary').innerHTML=nutritionProgress('Calorías consumidas',totals.kcal,t.kcal||0,'kcal')+nutritionProgress('Proteínas',totals.protein,t.protein||0,'g')+nutritionProgress('Hidratos',totals.carbs,t.carbs||0,'g')+nutritionProgress('Grasas',totals.fat,t.fat||0,'g');
  const entries=nutritionData.entries.filter(e=>e.date===nutritionToday());
@@ -98,7 +98,10 @@ async function startBarcodeCamera(){
  if(!('BarcodeDetector' in window)){document.getElementById('barcodeResult').textContent='Este navegador no ofrece escáner integrado. Puedes escribir el código de barras y pulsar Buscar producto.';return}
  if(!navigator.mediaDevices?.getUserMedia){document.getElementById('barcodeResult').textContent='No se puede acceder a la cámara en este contexto. Usa HTTPS o introduce el código manualmente.';return}
  try{
-  const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
+  const supported=await BarcodeDetector.getSupportedFormats();
+  const formats=['ean_13','ean_8','upc_a','upc_e'].filter(format=>supported.includes(format));
+  if(!formats.length)throw new Error('El navegador no admite formatos EAN/UPC compatibles. Introduce el código manualmente.');
+  const detector=new BarcodeDetector({formats});
   barcodeStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
   const video=document.getElementById('barcodeVideo');video.srcObject=barcodeStream;await video.play();
   document.getElementById('barcodeCamera').style.display='block';
