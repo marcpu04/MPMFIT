@@ -46,7 +46,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
  <div class="card">
   <div class="formgrid">
    <div class="field"><label>Selecciona una rutina</label><select id="trainRoutine" onchange="loadTrainingRoutine()"><option value="">Entrenamiento libre</option></select></div>
-   <div class="field"><label>Fecha</label><input id="trainDate" type="date"></div>
+   <div class="field"><label>Fecha</label><input id="trainDate" type="date" onchange="persistTrainingDraft()"></div>
   </div>
   <div class="timerbox">
    <div><div class="eyebrow">DESCANSO</div><div class="timerclock" id="timerClock">01:30</div></div>
@@ -123,8 +123,8 @@ function emptyDB(){return {routines:[],sessions:[]}}
 function loadDB(key){try{const value=JSON.parse(localStorage.getItem(key));return value&&Array.isArray(value.routines)&&Array.isArray(value.sessions)?value:emptyDB()}catch(e){return emptyDB()}}
 function storageKey(){return currentUser?ACCOUNT_KEY_PREFIX+currentUser.id:KEY+'_guest'}
 function trainingDraftKey(){return TRAINING_DRAFT_PREFIX+(currentUser?.id||'guest')}
-function persistTrainingDraft(){const routine=db.routines.find(r=>r.id===(document.getElementById('trainRoutine')?.value||''));const draft={date:document.getElementById('trainDate')?.value||'',routine_cloud_id:routine?.cloud_id||null,exercises:activeTraining};if(!activeTraining.length){localStorage.removeItem(trainingDraftKey());return}localStorage.setItem(trainingDraftKey(),JSON.stringify(draft))}
-function restoreTrainingDraft(){try{const raw=localStorage.getItem(trainingDraftKey());if(!raw)return false;const draft=JSON.parse(raw);if(!draft||!Array.isArray(draft.exercises)||!draft.exercises.length)return false;const routine=db.routines.find(r=>draft.routine_cloud_id&&r.cloud_id===draft.routine_cloud_id);activeTraining=draft.exercises;document.getElementById('trainRoutine').value=routine?.id||'';if(draft.date)document.getElementById('trainDate').value=draft.date;renderTraining();toast('Se ha recuperado tu entrenamiento sin guardar');return true}catch(e){console.error('No se pudo recuperar el entrenamiento en curso',e);return false}}
+function persistTrainingDraft(){const routine=db.routines.find(r=>r.id===(document.getElementById('trainRoutine')?.value||''));const draft={date:document.getElementById('trainDate')?.value||'',routine_id:routine?.id||null,routine_cloud_id:routine?.cloud_id||null,exercises:activeTraining};if(!activeTraining.length){localStorage.removeItem(trainingDraftKey());return}localStorage.setItem(trainingDraftKey(),JSON.stringify(draft))}
+function restoreTrainingDraft(){try{const raw=localStorage.getItem(trainingDraftKey());if(!raw)return false;const draft=JSON.parse(raw);if(!draft||!Array.isArray(draft.exercises)||!draft.exercises.length)return false;const routine=db.routines.find(r=>(draft.routine_cloud_id&&r.cloud_id===draft.routine_cloud_id)||(draft.routine_id&&r.id===draft.routine_id));activeTraining=draft.exercises;document.getElementById('trainRoutine').value=routine?.id||'';if(draft.date)document.getElementById('trainDate').value=draft.date;renderTraining();toast('Se ha recuperado tu entrenamiento sin guardar');return true}catch(e){console.error('No se pudo recuperar el entrenamiento en curso',e);return false}}
 function clearTrainingDraft(){localStorage.removeItem(trainingDraftKey())}
 function pendingDeleteKey(){return PENDING_DELETE_PREFIX+(currentUser?.id||'guest')}
 function loadPendingDeletes(){try{return JSON.parse(localStorage.getItem(pendingDeleteKey()))||{routines:[],workouts:[]}}catch(e){return {routines:[],workouts:[]}}}
@@ -183,9 +183,10 @@ async function activateUser(user){
   localStorage.setItem(accountKey,JSON.stringify(db));
   cloudReady=true;
   activeTraining=[];
+  setupTraining();
   restoreTrainingDraft();
   await queueCloudSave();
-  renderAll();setupTraining();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
+  renderAll();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
 }
 async function syncCloudRows(table,rows,makePayload){
@@ -301,7 +302,7 @@ function saveExercise(id){let name=document.getElementById('eName').value.trim()
 function removeExercise(rid,eid){let r=db.routines.find(x=>x.id===rid);r.exercises=r.exercises.filter(e=>e.id!==eid);persist()}
 function renderRoutines(){let box=document.getElementById('routineGrid');if(!db.routines.length){box.innerHTML='<div class="empty full">Todavía no tienes rutinas. Crea tu primera división de entrenamiento.</div>';return}box.innerHTML=db.routines.map(r=>`<div class="card routine-card"><div class="row"><div><div class="eyebrow">${r.exercises.length} EJERCICIOS</div><h3>${esc(r.name)}</h3><div class="muted">${esc(r.desc||'Sin descripción')}</div></div><button class="btn ghost small" onclick="openRoutineModal('${r.id}')">Editar</button></div><div class="stack" style="margin-top:14px">${r.exercises.length?r.exercises.map(e=>`<div class="exercise"><div><strong>${esc(e.name)}</strong><small>${esc(e.muscle)} · ${e.sets} series · ${esc(e.reps)} reps</small></div><button class="btn ghost small" onclick="removeExercise('${r.id}','${e.id}')">×</button></div>`).join(''):'<div class="empty">Añade el primer ejercicio.</div>'}</div><div class="row" style="margin-top:14px"><button class="btn secondary small" onclick="addExerciseToRoutine('${r.id}')">＋ Ejercicio</button><button class="btn small" onclick="startRoutine('${r.id}')">Entrenar →</button></div><div style="margin-top:10px;text-align:right"><button class="btn danger small" onclick="deleteRoutine('${r.id}')">Eliminar rutina</button></div></div>`).join('')}
 function startRoutine(id){showView('train');document.getElementById('trainRoutine').value=id;loadTrainingRoutine()}
-function setupTraining(){let s=document.getElementById('trainRoutine');let old=s.value;s.innerHTML='<option value="">Entrenamiento libre</option>'+db.routines.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');if(db.routines.some(r=>r.id===old))s.value=old;document.getElementById('trainDate').value=new Date().toISOString().slice(0,10);if(!activeTraining.length)loadTrainingRoutine()}
+function setupTraining(){let s=document.getElementById('trainRoutine');let old=s.value;s.innerHTML='<option value="">Entrenamiento libre</option>'+db.routines.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');if(db.routines.some(r=>r.id===old))s.value=old;if(!document.getElementById('trainDate').value)document.getElementById('trainDate').value=new Date().toISOString().slice(0,10);if(!activeTraining.length)loadTrainingRoutine()}
 function lastExerciseData(name){for(const session of db.sessions){const found=session.exercises.find(e=>e.name.toLowerCase()===name.toLowerCase());if(found)return found}return null}
 function loadTrainingRoutine(){
  let id=document.getElementById('trainRoutine').value,r=db.routines.find(x=>x.id===id);
