@@ -11,7 +11,7 @@ function loadNutritionData(){
   nutritionData=saved&&Array.isArray(saved.entries)?{goal:saved.goal||'maintenance',targets:saved.targets||{kcal:0,protein:0,carbs:0,fat:0},entries:saved.entries,favorites:Array.isArray(saved.favorites)?saved.favorites:[],savedMeals:Array.isArray(saved.savedMeals)?saved.savedMeals:[],recipes:Array.isArray(saved.recipes)?saved.recipes:[],mealPlans:Array.isArray(saved.mealPlans)?saved.mealPlans:[],quantityMemory:saved.quantityMemory&&typeof saved.quantityMemory==='object'?saved.quantityMemory:{}}:{goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[],quantityMemory:{}};
  }catch(e){nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[],quantityMemory:{}}}
 }
-function saveNutritionData(){localStorage.setItem(nutritionStorageKey(),JSON.stringify(nutritionData))}
+function saveNutritionData(){localStorage.setItem(nutritionStorageKey(),JSON.stringify(nutritionData));if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty()}
 function nutritionToday(){return document.getElementById('nutritionDate')?.value||new Date().toISOString().slice(0,10)}
 function nutritionNumber(id){return Math.max(0,Number(document.getElementById(id)?.value)||0)}
 function nutritionGoalName(goal){return ({bulk:'Volumen',cut:'Definición',maintenance:'Mantenimiento'})[goal]||'Mantenimiento'}
@@ -508,10 +508,10 @@ function saveBodyWeight(){
  const entries=getBodyWeightEntries(),existing=entries.find(x=>x.date===date);
  if(existing){if(!confirm('Ya existe un peso para ese día. ¿Quieres sustituirlo?'))return;existing.weight=weight}
  else entries.push({id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,weight});
- localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));document.getElementById('bodyWeightValue').value='';renderBodyWeight();renderBodyWeightGoal();toast('Peso guardado');
+ localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty();document.getElementById('bodyWeightValue').value='';renderBodyWeight();renderBodyWeightGoal();toast('Peso guardado');
 }
 function deleteBodyWeight(id){
- const entries=getBodyWeightEntries().filter(x=>x.id!==id);localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));renderBodyWeight();toast('Registro eliminado');
+ const entries=getBodyWeightEntries().filter(x=>x.id!==id);localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty();renderBodyWeight();toast('Registro eliminado');
 }
 
 // Seguimiento de perímetros corporales.
@@ -533,9 +533,9 @@ function saveBodyMeasurements(){
  for(const [key,id] of Object.entries(fields)){const raw=document.getElementById(id)?.value;if(raw==='')continue;const value=Number(String(raw).replace(',','.'));if(!Number.isFinite(value)||value<1||value>(key==='bodyFat'?70:300)){toast('Revisa las medidas: grasa corporal entre 1 y 70 % y perímetros entre 1 y 300 cm');return}values[key]=value}
  if(!Object.keys(values).length){toast('Introduce al menos una medida');return}
  const entries=getBodyMeasureEntries(),index=entries.findIndex(x=>x.date===date);if(index>=0){if(!confirm('Ya hay medidas guardadas para ese día. ¿Quieres sustituirlas?'))return;entries[index]={...entries[index],...values,date,id:entries[index].id}}else entries.push({...values,date,id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()});
- localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));Object.values(fields).forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});renderBodyMeasurements();toast('Medidas guardadas');
+ localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty();Object.values(fields).forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});renderBodyMeasurements();toast('Medidas guardadas');
 }
-function deleteBodyMeasurements(id){const entries=getBodyMeasureEntries().filter(x=>x.id!==id);localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));renderBodyMeasurements();toast('Medición eliminada')}
+function deleteBodyMeasurements(id){const entries=getBodyMeasureEntries().filter(x=>x.id!==id);localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty();renderBodyMeasurements();toast('Medición eliminada')}
 
 // Objetivo de peso configurable por usuario.
 function bodyWeightGoalKey(){return 'mpmfit_bodyweight_goal_v1_'+(currentUser?.id||'guest')}
@@ -546,9 +546,9 @@ function renderBodyWeightGoal(){
  else{input.value='';box.textContent='Sin objetivo establecido.'}
 }
 function saveBodyWeightGoal(){
- const input=document.getElementById('bodyWeightGoal'),raw=input?.value;if(!raw){localStorage.removeItem(bodyWeightGoalKey());renderBodyWeightGoal();toast('Objetivo eliminado');return}
+ const input=document.getElementById('bodyWeightGoal'),raw=input?.value;if(!raw){localStorage.removeItem(bodyWeightGoalKey());if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty();renderBodyWeightGoal();toast('Objetivo eliminado');return}
  const value=Number(String(raw).replace(',','.'));if(!Number.isFinite(value)||value<20||value>400){toast('Introduce un objetivo entre 20 y 400 kg');return}
- localStorage.setItem(bodyWeightGoalKey(),String(value));renderBodyWeightGoal();toast('Objetivo de peso guardado');
+ localStorage.setItem(bodyWeightGoalKey(),String(value));if(window.MPMFitCloudSync)window.MPMFitCloudSync.markDirty();renderBodyWeightGoal();toast('Objetivo de peso guardado');
 }
 // Fotos privadas: se guardan en IndexedDB de este navegador, no en la nube.
 function progressPhotoDb(){return new Promise((resolve,reject)=>{const request=indexedDB.open('mpmfit_progress_photos',1);request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'})};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})}
