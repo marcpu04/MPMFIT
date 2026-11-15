@@ -55,6 +55,9 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
 
+      - name: Apply MPMFIT launcher icon
+        run: node scripts/prepare-android-icons.js
+
       - name: Add camera permission
         shell: bash
         run: |
