@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="MPMFIT">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-<title>MPMFIT — Training Log</title>
+<title>MPMFIT — Fitness App</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0b0e0c;--panel:#141a16;--panel2:#1a211c;--line:#29332c;--green:#9be66b;--green2:#b8ff83;--muted:#94a096;--text:#f0f5f0;--red:#ff7777}
@@ -35,7 +35,7 @@ input,select,textarea{font-size:16px}
   .top{position:sticky;top:0;z-index:20;margin:0 -12px 16px;padding:9px 12px;background:rgba(11,14,12,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(65,82,68,.45)}
   .brand{gap:9px}.logo{width:38px;height:38px;border-radius:12px}.brand strong{font-size:18px}.brand small{font-size:9px;letter-spacing:1.5px}
   .topright{gap:6px}.topright .btn{min-height:38px;padding:7px 9px;font-size:11px}
-  .topright #accountButton{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topright #accountButton{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n  .topright button[onclick="openBackup()"]{display:none}
   .nav{display:none}
   .mobile-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:7px 7px calc(7px + env(safe-area-inset-bottom));background:rgba(17,23,19,.97);border-top:1px solid #334136;backdrop-filter:blur(18px)}
   .mobile-nav button{min-width:0;min-height:55px;border:0;border-radius:12px;background:transparent;color:#9aa69c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 2px;font-size:10px;font-weight:700;white-space:nowrap}
@@ -92,7 +92,7 @@ input,select,textarea{font-size:16px}
 <body>
 <div class="app">
 <header class="top">
- <div class="brand"><div class="logo">M</div><div><strong>MPMFIT</strong><small>TRAINING LOG</small></div></div>
+ <div class="brand"><div class="logo">M</div><div><strong>MPMFIT</strong><small>TRAINING · NUTRITION · PROGRESS</small></div></div>
  <div class="topright"><span class="pill" id="syncStatus">● SIN CONECTAR</span><button class="btn secondary small" id="accountButton" onclick="openAccount()">Iniciar sesión</button><button class="btn secondary small" onclick="openBackup()">Copia de seguridad</button></div>
 </header>
 <nav class="nav">
@@ -111,6 +111,7 @@ input,select,textarea{font-size:16px}
  <button data-view="history">◷ Historial</button>
  <button data-view="calendar">▦ Calendario</button>
  <button data-view="records">★ Récords</button>
+ <button type="button" onclick="openBackup()">↗ Copia de seguridad</button>
 </div>
 
 <section id="home" class="view active">
@@ -152,7 +153,7 @@ input,select,textarea{font-size:16px}
 
 
 <section id="nutrition" class="view">
- <div class="heading"><div><div class="eyebrow">ALIMENTACIÓN SIN COMPLICACIONES</div><h1>MPMFIT Nutrition</h1><div class="muted">Registra lo que comes sin perder tiempo.</div></div><span class="pill">Guardado en este dispositivo</span></div>
+ <div class="heading"><div><div class="eyebrow">ALIMENTACIÓN SIN COMPLICACIONES</div><h1>MPMFIT Nutrition</h1><div class="muted">Registra lo que comes sin perder tiempo.</div></div><span class="pill">Sincronizado con tu cuenta</span></div>
  <div class="grid">
   <div class="card full"><div class="row" style="flex-wrap:wrap"><div><h3>Tu día</h3><div class="hint">Calorías y macros consumidos.</div></div><div class="field" style="min-width:150px"><label>Fecha</label><input type="date" id="nutritionDate" onchange="renderNutrition()"></div></div><div id="nutritionSummary" class="grid" style="margin-top:12px"></div></div>
   <div class="card full"><div class="row"><div><h3>¿Qué has comido?</h3><div class="hint">Busca y añádelo. Recordaremos tus cantidades habituales.</div></div><select id="nutritionQuickMeal" aria-label="Comida" style="max-width:170px" onchange="renderNutritionQuick()"><option>Desayuno</option><option>Media mañana</option><option selected>Comida</option><option>Merienda</option><option>Cena</option><option>Otros</option></select></div>
