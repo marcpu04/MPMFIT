@@ -234,12 +234,11 @@ function queueCloudSave(){
   setSyncStatus('● GUARDANDO…');
   const uidUser=currentUser.id;
   const pending=loadPendingDeletes();
-  for(const table of ['workouts','routines']){
-   const ids=pending[table]||[];
-   if(!ids.length)continue;
-   const result=await supabaseClient.from(table).delete().eq('user_id',uidUser).in('id',ids);
+  const workoutIds=pending.workouts||[];
+  if(workoutIds.length){
+   const result=await supabaseClient.from('workouts').delete().eq('user_id',uidUser).in('id',workoutIds);
    if(result.error)throw result.error;
-   pending[table]=[];
+   pending.workouts=[];
    persistPendingDeletes(pending);
   }
   ensureCloudIds();
@@ -247,6 +246,13 @@ function queueCloudSave(){
   await syncCloudRows('workouts',db.sessions,s=>{
    return {id:s.cloud_id,user_id:uidUser,routine_id:s.routine_cloud_id||null,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises};
   });
+  const routineIds=pending.routines||[];
+  if(routineIds.length){
+   const result=await supabaseClient.from('routines').delete().eq('user_id',uidUser).in('id',routineIds);
+   if(result.error)throw result.error;
+   pending.routines=[];
+   persistPendingDeletes(pending);
+  }
   localStorage.setItem(storageKey(),JSON.stringify(db));
   setSyncStatus('● SINCRONIZADO');
  }).catch(error=>{setSyncStatus('● ERROR AL GUARDAR');console.error(error);toast('Error de sincronización: '+(error.message||'revisa la conexión'));});
@@ -315,7 +321,7 @@ function openRoutineModal(id=null){
  openModal(`<h2>${r?'Editar':'Crear'} rutina</h2><div class="stack"><div class="field"><label>Nombre del día / rutina</label><input id="rName" placeholder="Ej. PUSH, Tirón, Pierna..." value="${esc(r?.name||'')}"></div><div class="field"><label>Descripción (opcional)</label><input id="rDesc" placeholder="Ej. Pecho, hombro y tríceps" value="${esc(r?.desc||'')}"></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveRoutine('${id||''}')">Guardar rutina</button></div>`);
 }
 function saveRoutine(id){let name=document.getElementById('rName').value.trim();if(!name){toast('Escribe un nombre para la rutina');return}let desc=document.getElementById('rDesc').value.trim();if(id){let r=db.routines.find(x=>x.id===id);r.name=name;r.desc=desc}else db.routines.push({id:uid(),name,desc,exercises:[]});closeModal();persist();toast('Rutina guardada')}
-function deleteRoutine(id){if(!confirm('¿Eliminar esta rutina? Los entrenamientos ya guardados no se borrarán.'))return;const routine=db.routines.find(r=>r.id===id);if(routine?.cloud_id)addPendingDelete('routines',routine.cloud_id);db.routines=db.routines.filter(r=>r.id!==id);persist()}
+function deleteRoutine(id){if(!confirm('¿Eliminar esta rutina? Los entrenamientos ya guardados no se borrarán.'))return;const routine=db.routines.find(r=>r.id===id);if(routine?.cloud_id){db.sessions.forEach(session=>{if(session.routine_cloud_id===routine.cloud_id)session.routine_cloud_id=null});addPendingDelete('routines',routine.cloud_id)}db.routines=db.routines.filter(r=>r.id!==id);persist()}
 function addExerciseToRoutine(id){openModal(`<h2>Añadir ejercicio</h2><div class="stack"><div class="field"><label>Nombre del ejercicio</label><input id="eName" placeholder="Ej. Press banca"></div><div class="formgrid"><div class="field"><label>Series</label><input id="eSets" type="number" min="1" max="20" value="3"></div><div class="field"><label>Repeticiones objetivo</label><input id="eReps" placeholder="Ej. 8-12" value="8-12"></div><div class="field fullfield"><label>Grupo muscular</label><select id="eMuscle"><option>Pecho</option><option>Espalda</option><option>Hombros</option><option>Bíceps</option><option>Tríceps</option><option>Cuádriceps</option><option>Isquios</option><option>Glúteos</option><option>Pantorrillas</option><option>Abdominales</option><option>Otro</option></select></div></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveExercise('${id}')">Añadir ejercicio</button></div>`)}
 function saveExercise(id){let name=document.getElementById('eName').value.trim(),sets=Math.max(1,Math.min(20,Number(document.getElementById('eSets').value)||3)),reps=document.getElementById('eReps').value.trim()||'8-12',muscle=document.getElementById('eMuscle').value;if(!name){toast('Escribe el nombre del ejercicio');return}db.routines.find(r=>r.id===id).exercises.push({id:uid(),name,sets,reps,muscle});closeModal();persist();toast('Ejercicio añadido')}
 function removeExercise(rid,eid){let r=db.routines.find(x=>x.id===rid);r.exercises=r.exercises.filter(e=>e.id!==eid);persist()}
