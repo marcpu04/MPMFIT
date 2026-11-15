@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#101310">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MPMFIT">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
 <title>MPMFIT — Training Log</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -17,7 +23,71 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 #nutritionAdvanced summary{list-style:none}#nutritionAdvanced summary::-webkit-details-marker{display:none}
 #nutritionAdvanced summary:after{content:"＋";float:right;font-size:18px}#nutritionAdvanced[open] summary:after{content:"−"}
 @media(max-width:600px){.quick-food{align-items:flex-start}.quick-food .btn{padding:8px 10px}}
-.weight-entry-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.weight-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.weight-chart{width:100%;height:auto;display:block;overflow:visible}@media(max-width:600px){.weight-entry-grid{grid-template-columns:1fr 1fr}.weight-entry-grid .field:last-child{grid-column:1/-1}}.measure-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.measure-stat{background:#101511;border:1px solid var(--line);border-radius:12px;padding:12px}.measure-stat b{display:block;font-size:20px;margin-top:5px}.weight-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.weight-chart{width:100%;height:auto;display:block;overflow:visible}@media(max-width:760px){.measure-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.weight-entry-grid{grid-template-columns:1fr 1fr}.weight-entry-grid .field:last-child{grid-column:1/-1}}.goal-weight-row{display:flex;align-items:end;gap:12px;max-width:520px;margin-top:14px}.goal-weight-row .field{flex:1}.progress-photo-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.progress-photo-card{border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0}.progress-photo-card img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block}.photo-upload-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.photo-upload-row .field{flex:1;min-width:160px}@media(max-width:760px){.measure-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.goal-weight-row,.photo-upload-row{display:grid;grid-template-columns:1fr}.goal-weight-row button,.photo-upload-row button{width:100%}}</style>
+.weight-entry-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.weight-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.weight-chart{width:100%;height:auto;display:block;overflow:visible}@media(max-width:600px){.weight-entry-grid{grid-template-columns:1fr 1fr}.weight-entry-grid .field:last-child{grid-column:1/-1}}.measure-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.measure-stat{background:#101511;border:1px solid var(--line);border-radius:12px;padding:12px}.measure-stat b{display:block;font-size:20px;margin-top:5px}.weight-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.weight-chart{width:100%;height:auto;display:block;overflow:visible}@media(max-width:760px){.measure-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.weight-entry-grid{grid-template-columns:1fr 1fr}.weight-entry-grid .field:last-child{grid-column:1/-1}}.goal-weight-row{display:flex;align-items:end;gap:12px;max-width:520px;margin-top:14px}.goal-weight-row .field{flex:1}.progress-photo-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.progress-photo-card{border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0}.progress-photo-card img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;display:block}.photo-upload-row{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.photo-upload-row .field{flex:1;min-width:160px}@media(max-width:760px){.measure-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.goal-weight-row,.photo-upload-row{display:grid;grid-template-columns:1fr}.goal-weight-row button,.photo-upload-row button{width:100%}}
+/* MPMFIT Mobile First — navegación, espacios y controles táctiles */
+.mobile-nav,.mobile-more{display:none}
+button,[role="button"]{-webkit-tap-highlight-color:transparent}
+input,select,textarea{font-size:16px}
+@media(max-width:760px){
+  html{scroll-padding-top:16px;scroll-padding-bottom:100px}
+  body{min-height:100dvh}
+  .app{padding:12px 12px calc(94px + env(safe-area-inset-bottom))}
+  .top{position:sticky;top:0;z-index:20;margin:0 -12px 16px;padding:9px 12px;background:rgba(11,14,12,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(65,82,68,.45)}
+  .brand{gap:9px}.logo{width:38px;height:38px;border-radius:12px}.brand strong{font-size:18px}.brand small{font-size:9px;letter-spacing:1.5px}
+  .topright{gap:6px}.topright .btn{min-height:38px;padding:7px 9px;font-size:11px}
+  .topright #accountButton{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav{display:none}
+  .mobile-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:7px 7px calc(7px + env(safe-area-inset-bottom));background:rgba(17,23,19,.97);border-top:1px solid #334136;backdrop-filter:blur(18px)}
+  .mobile-nav button{min-width:0;min-height:55px;border:0;border-radius:12px;background:transparent;color:#9aa69c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 2px;font-size:10px;font-weight:700;white-space:nowrap}
+  .mobile-nav button .mobile-icon{font-size:19px;line-height:1.1}
+  .mobile-nav button.active{background:#203021;color:var(--green)}
+  .mobile-more{position:fixed;z-index:49;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px;background:#151d17;border:1px solid #39483b;border-radius:18px;box-shadow:0 16px 50px #000b}
+  .mobile-more.open{display:grid}
+  .mobile-more button{min-height:48px;border:1px solid #2c392f;border-radius:12px;background:#101711;color:var(--text);text-align:left;padding:10px 12px}
+  .mobile-more button.active{border-color:var(--green);color:var(--green)}
+  .heading{gap:10px;margin-bottom:14px}.heading h1{font-size:clamp(25px,7vw,32px);line-height:1.1}
+  .heading>.btn{width:100%;min-height:48px}
+  .grid{gap:10px}.card{padding:14px;border-radius:15px}
+  .stat{grid-column:span 6}.stat b{font-size:25px}
+  .btn{min-height:44px;padding:11px 14px}.btn.small{min-height:38px}
+  .row{flex-wrap:wrap}
+  .row>.btn{flex:0 0 auto}
+  .formgrid{gap:9px}
+  input,select,textarea{min-height:46px;padding:11px 12px;border-radius:11px}
+  .field label{font-size:12px}
+  .setrow,.sethead{grid-template-columns:25px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 28px;gap:4px}
+  .setrow input{min-width:0;min-height:42px;padding:7px 2px;font-size:14px}
+  .sethead{font-size:10px}
+  .exercise-block{padding:11px;margin:10px 0}
+  .exercise{padding:10px;gap:7px}
+  .catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .catalog-item{padding:11px}
+  .filterrow{gap:8px}.filterrow>*{min-width:0;flex:1 1 100%}
+  .timerbox{gap:9px;padding:11px}
+  .timerbox .field{flex:1;min-width:105px!important}
+  .timerbox .btn{flex:1}
+  .calendar-grid{gap:3px}.cal-day{min-width:0;overflow:hidden}
+  .weight-entry-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .measure-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .goal-weight-row{display:grid;grid-template-columns:1fr}
+  .photo-upload-row{display:grid;grid-template-columns:1fr}
+  .progress-photo-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .modalback{align-items:flex-end;padding:0}
+  .modal{width:100%;max-width:none;max-height:90dvh;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  .modalactions{position:sticky;bottom:-18px;background:#151c17;padding:12px 0 4px}
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom));max-width:calc(100vw - 28px);text-align:center}
+  .footer{margin:18px 0 4px}
+}
+@media(max-width:380px){
+  .app{padding-left:10px;padding-right:10px}
+  .top{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+  .brand strong{font-size:16px}
+  .topright .btn{padding:6px 7px;font-size:10px}
+  .catalog-grid{grid-template-columns:1fr}
+  .stat b{font-size:22px}
+}
+@media(min-width:761px){.mobile-nav,.mobile-more{display:none!important}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -28,6 +98,20 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 <nav class="nav">
  <button class="active" data-view="home">▦ Inicio</button><button data-view="routines">▤ Rutinas</button><button data-view="train">＋ Entrenar</button><button data-view="library">▧ Ejercicios</button><button data-view="history">◷ Historial</button><button data-view="calendar">▦ Calendario</button><button data-view="progress">↗ Progreso</button><button data-view="records">★ Récords</button><button data-view="nutrition">🥗 Nutrición</button>
 </nav>
+<nav class="mobile-nav" aria-label="Navegación principal móvil">
+ <button data-view="home" class="active"><span class="mobile-icon">⌂</span><span>Inicio</span></button>
+ <button data-view="train"><span class="mobile-icon">＋</span><span>Entrenar</span></button>
+ <button data-view="nutrition"><span class="mobile-icon">◉</span><span>Nutrición</span></button>
+ <button data-view="progress"><span class="mobile-icon">↗</span><span>Progreso</span></button>
+ <button type="button" id="mobileMoreButton" aria-expanded="false" aria-controls="mobileMoreMenu"><span class="mobile-icon">☰</span><span>Más</span></button>
+</nav>
+<div class="mobile-more" id="mobileMoreMenu" aria-label="Más secciones">
+ <button data-view="routines">▤ Rutinas</button>
+ <button data-view="library">▧ Ejercicios</button>
+ <button data-view="history">◷ Historial</button>
+ <button data-view="calendar">▦ Calendario</button>
+ <button data-view="records">★ Récords</button>
+</div>
 
 <section id="home" class="view active">
  <div class="heading"><div><div class="eyebrow">TU ESPACIO DE ENTRENAMIENTO</div><h1>Vamos a trabajar.</h1><div class="muted" id="todayText"></div></div><button class="btn" onclick="showView('train')">＋ Empezar entrenamiento</button></div>
@@ -400,8 +484,22 @@ function confirmCatalogExercise(name,muscle){
 }
 
 function toast(t){let el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',2200)}
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='train')setupTraining();if(id==='nutrition'&&typeof renderNutrition==='function')renderNutrition();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();window.scrollTo(0,0)}
-document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+function showView(id){
+ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));
+ document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+ const more=document.getElementById('mobileMoreMenu');if(more)more.classList.remove('open');
+ const moreButton=document.getElementById('mobileMoreButton');if(moreButton)moreButton.setAttribute('aria-expanded','false');
+ if(id==='train')setupTraining();if(id==='nutrition'&&typeof renderNutrition==='function')renderNutrition();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();window.scrollTo(0,0)
+}
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+document.getElementById('mobileMoreButton')?.addEventListener('click',()=>{
+ const menu=document.getElementById('mobileMoreMenu'),button=document.getElementById('mobileMoreButton');
+ const open=menu.classList.toggle('open');button.setAttribute('aria-expanded',String(open));
+});
+document.addEventListener('click',event=>{
+ const menu=document.getElementById('mobileMoreMenu'),button=document.getElementById('mobileMoreButton');
+ if(menu&&button&&!menu.contains(event.target)&&!button.contains(event.target)){menu.classList.remove('open');button.setAttribute('aria-expanded','false')}
+});
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modalback').style.display='flex'}
 function closeModal(){document.getElementById('modalback').style.display='none'}
 document.getElementById('modalback').addEventListener('click',e=>{if(e.target.id==='modalback')closeModal()});
@@ -522,5 +620,10 @@ if(LOCAL_DEMO_MODE){
 </script>
 <script src="nutrition.js"></script>
 <script src="cloud-sync.js"></script>
+<script>
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+ window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(error=>console.warn('MPMFIT: no se pudo registrar el modo instalable',error)));
+}
+</script>
 </body>
 </html>
