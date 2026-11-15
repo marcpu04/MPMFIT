@@ -1,0 +1,21 @@
+{
+  "id": "./MPMFIT%203.0.html",
+  "name": "MPMFIT",
+  "short_name": "MPMFIT",
+  "description": "Entrenamiento, nutrición y progreso físico en una sola aplicación.",
+  "lang": "es-ES",
+  "start_url": "./MPMFIT%203.0.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e0c",
+  "theme_color": "#101310",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
