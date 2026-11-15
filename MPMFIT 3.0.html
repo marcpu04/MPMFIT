@@ -159,7 +159,7 @@ async function activateUser(user){
   if(re)throw re;if(we)throw we;
   const pending=loadPendingDeletes();
   const remoteRoutines=(routines||[]).filter(r=>!pending.routines.includes(r.id)).map(r=>({id:uid(),cloud_id:r.id,name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]}));
-  const remoteSessions=(workouts||[]).filter(w=>!pending.workouts.includes(w.id)).map(w=>({id:uid(),cloud_id:w.id,date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}));
+  const remoteSessions=(workouts||[]).filter(w=>!pending.workouts.includes(w.id)).map(w=>({id:uid(),cloud_id:w.id,routine_cloud_id:w.routine_id||null,date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}));
   const mergeByCloudId=(localRows,remoteRows)=>{
    const merged=localRows.slice();
    const known=new Set(merged.map(x=>x.cloud_id).filter(Boolean));
@@ -194,7 +194,7 @@ function queueCloudSave(){
    if(result.error)throw result.error;
   }
   if(db.sessions.length){
-   const rows=db.sessions.map(s=>({id:s.cloud_id,user_id:uidUser,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises}));
+   const rows=db.sessions.map(s=>({id:s.cloud_id,user_id:uidUser,routine_id:s.routine_cloud_id||null,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises}));
    const result=await supabaseClient.from('workouts').upsert(rows,{onConflict:'id'});
    if(result.error)throw result.error;
   }
@@ -301,7 +301,7 @@ function toggleTimer(){if(timerInterval)stopTimer();else startTimer()}
 function resetTimer(){stopTimer();timerRemaining=Number(document.getElementById('timerDuration').value)||90;formatTimer()}
 function addSet(i){activeTraining[i].sets.push({reps:'',weight:'',rir:'',done:false});renderTraining()}
 function removeTrainingExercise(i){activeTraining.splice(i,1);renderTraining()}
-function saveSession(){let exercises=activeTraining.map(e=>({...e,sets:e.sets.map(s=>({...s}))})).filter(e=>e.name);if(!exercises.length)return toast('Añade al menos un ejercicio');let date=document.getElementById('trainDate').value||new Date().toISOString().slice(0,10);db.sessions.unshift({id:uid(),date,routine:db.routines.find(r=>r.id===document.getElementById('trainRoutine').value)?.name||'Entrenamiento libre',exercises});persist();activeTraining=[];document.getElementById('trainRoutine').value='';renderTraining();toast('Entrenamiento guardado')}
+function saveSession(){let exercises=activeTraining.map(e=>({...e,sets:e.sets.map(s=>({...s}))})).filter(e=>e.name);if(!exercises.length)return toast('Añade al menos un ejercicio');ensureCloudIds();let date=document.getElementById('trainDate').value||new Date().toISOString().slice(0,10),selectedRoutine=db.routines.find(r=>r.id===document.getElementById('trainRoutine').value);db.sessions.unshift({id:uid(),date,routine:selectedRoutine?.name||'Entrenamiento libre',routine_cloud_id:selectedRoutine?.cloud_id||null,exercises});persist();activeTraining=[];document.getElementById('trainRoutine').value='';renderTraining();toast('Entrenamiento guardado')}
 function renderHistory(){let box=document.getElementById('historyList');if(!db.sessions.length){box.innerHTML='<div class="empty">Todavía no hay sesiones registradas.</div>';return}box.innerHTML=db.sessions.map(s=>`<div class="history-item"><div class="row"><div><strong>${esc(s.routine)}</strong><div class="muted">${new Date(s.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})} · ${s.exercises.length} ejercicios</div></div><button class="btn danger small" onclick="deleteSession('${s.id}')">Eliminar</button></div><div class="muted" style="margin-top:8px">${s.exercises.map(e=>`${esc(e.name)} (${e.sets.length} series)`).join(' · ')}</div></div>`).join('')}
 function deleteSession(id){if(!confirm('¿Eliminar esta sesión del historial?'))return;const session=db.sessions.find(s=>s.id===id);if(session?.cloud_id)addPendingDelete('workouts',session.cloud_id);db.sessions=db.sessions.filter(s=>s.id!==id);persist();renderHistory()}
 function totalVolume(){return db.sessions.reduce((sum,s)=>sum+s.exercises.reduce((a,e)=>a+e.sets.reduce((b,x)=>b+(Number(x.weight)||0)*(Number(x.reps)||0),0),0),0)}
