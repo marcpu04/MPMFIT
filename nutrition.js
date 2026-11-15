@@ -3,6 +3,7 @@
 // de nutrición se incorporará cuando se apruebe y pruebe su esquema independiente.
 let nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[]};
 let barcodeStream=null,barcodeFrame=null;
+let nutritionAddLocked=false,barcodeLookupInProgress=false,barcodeCameraStarting=false;
 function nutritionStorageKey(){return 'mpmfit_nutrition_v1_'+(currentUser?.id||'guest')}
 function loadNutritionData(){
  try{
@@ -61,12 +62,17 @@ function addNutritionEntry(item){
  saveNutritionData();renderNutrition();toast('Alimento añadido al diario');
 }
 function addManualFood(){
+ if(nutritionAddLocked)return;
  const name=document.getElementById('foodName').value.trim();
  if(!name){toast('Escribe el nombre del alimento');return}
  const values=['foodKcal','foodProtein','foodCarbs','foodFat'].map(n=>Number(document.getElementById(n).value));
  if(values.some(v=>!Number.isFinite(v)||v<0)||!document.getElementById('foodKcal').value){toast('Introduce calorías y macros por cada 100 g');return}
  const grams=nutritionNumber('foodGrams');if(!grams){toast('Introduce una cantidad válida');return}
- addNutritionEntry({name,grams,kcal:values[0],protein:values[1],carbs:values[2],fat:values[3]});
+ nutritionAddLocked=true;
+ const button=document.querySelector('button[onclick="addManualFood()"]');
+ if(button){button.disabled=true;button.dataset.originalText=button.textContent;button.textContent='Añadiendo…'}
+ try{addNutritionEntry({name,grams,kcal:values[0],protein:values[1],carbs:values[2],fat:values[3]})}
+ finally{setTimeout(()=>{nutritionAddLocked=false;if(button){button.disabled=false;button.textContent=button.dataset.originalText||'＋ Añadir al diario'}},700)}
 }
 function fillFoodForm(product,barcode){
  document.getElementById('foodName').value=product.name||'Producto sin nombre';
@@ -79,8 +85,12 @@ function fillFoodForm(product,barcode){
  document.getElementById('foodBarcode').dataset.lastBarcode=barcode;
 }
 async function lookupBarcode(code){
+ if(barcodeLookupInProgress)return;
  const barcode=String(code||document.getElementById('foodBarcode').value).trim();
  if(!/^[0-9]{8,14}$/.test(barcode)){toast('Introduce un código EAN/UPC válido (8 a 14 cifras)');return}
+ barcodeLookupInProgress=true;
+ const button=document.querySelector('button[onclick="lookupBarcode()"]');
+ if(button){button.disabled=true;button.dataset.originalText=button.textContent;button.textContent='Buscando…'}
  const result=document.getElementById('barcodeResult');result.textContent='Buscando producto…';
  try{
   const response=await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(barcode)+'.json?fields=product_name,product_name_es,brands,nutriments');
@@ -94,10 +104,13 @@ async function lookupBarcode(code){
   fillFoodForm(product,barcode);
   toast('Producto localizado. Comprueba la etiqueta.');
  }catch(error){result.textContent=error.message||'Error al buscar el producto';}
+ finally{barcodeLookupInProgress=false;if(button){button.disabled=false;button.textContent=button.dataset.originalText||'Buscar producto'}}
 }
 async function startBarcodeCamera(){
- if(!('BarcodeDetector' in window)){document.getElementById('barcodeResult').textContent='Este navegador no ofrece escáner integrado. Puedes escribir el código de barras y pulsar Buscar producto.';return}
- if(!navigator.mediaDevices?.getUserMedia){document.getElementById('barcodeResult').textContent='No se puede acceder a la cámara en este contexto. Usa HTTPS o introduce el código manualmente.';return}
+ if(barcodeCameraStarting||barcodeStream)return;
+ barcodeCameraStarting=true;
+ if(!('BarcodeDetector' in window)){barcodeCameraStarting=false;document.getElementById('barcodeResult').textContent='Este navegador no ofrece escáner integrado. Puedes escribir el código de barras y pulsar Buscar producto.';return}
+ if(!navigator.mediaDevices?.getUserMedia){barcodeCameraStarting=false;document.getElementById('barcodeResult').textContent='No se puede acceder a la cámara en este contexto. Usa HTTPS o introduce el código manualmente.';return}
  try{
   const supported=await BarcodeDetector.getSupportedFormats();
   const formats=['ean_13','ean_8','upc_a','upc_e'].filter(format=>supported.includes(format));
@@ -114,6 +127,7 @@ async function startBarcodeCamera(){
   };
   scan();
  }catch(error){stopBarcodeCamera();document.getElementById('barcodeResult').textContent='No se pudo iniciar la cámara. Comprueba el permiso del navegador o introduce el código manualmente.'}
+ finally{barcodeCameraStarting=false}
 }
 function stopBarcodeCamera(){
  if(barcodeFrame)cancelAnimationFrame(barcodeFrame);barcodeFrame=null;
