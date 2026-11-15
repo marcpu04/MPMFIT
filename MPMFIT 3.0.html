@@ -190,12 +190,14 @@ async function syncCloudRows(table,rows,makePayload){
    const {data,error}=await supabaseClient.from(table).insert(payload).select('id,updated_at').single();
    if(error)throw error;
    row.updated_at=data.updated_at;
+   localStorage.setItem(storageKey(),JSON.stringify(db));
   }else{
    if(!row.updated_at)throw new Error('Conflicto de sincronización: falta la versión local de un registro. No se han sobrescrito datos; vuelve a cargar la aplicación.');
    const {data,error}=await supabaseClient.from(table).update(payload).eq('id',row.cloud_id).eq('updated_at',row.updated_at).select('id,updated_at').maybeSingle();
    if(error)throw error;
    if(!data)throw new Error('Otro dispositivo ha modificado este registro. Tus datos locales se conservan; vuelve a cargar la aplicación para sincronizar la versión más reciente.');
    row.updated_at=data.updated_at;
+   localStorage.setItem(storageKey(),JSON.stringify(db));
   }
  }
 }
