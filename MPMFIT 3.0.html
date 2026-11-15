@@ -187,27 +187,45 @@ async function activateUser(user){
   setupTraining();
   restoreTrainingDraft();
   await queueCloudSave();
-  renderAll();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
+  renderAll();
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
+}
+function stableJson(value){
+ if(Array.isArray(value))return '['+value.map(stableJson).join(',')+']';
+ if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+stableJson(value[key])).join(',')+'}';
+ return JSON.stringify(value);
+}
+function cloudPayloadMatches(table,existing,payload){
+ if(existing.name!==payload.name||stableJson(existing.exercises)!==stableJson(payload.exercises))return false;
+ if(table==='workouts'){
+  const existingDate=existing.date?new Date(existing.date).getTime():NaN;
+  const payloadDate=payload.date?new Date(payload.date).getTime():NaN;
+  return (existing.routine_id||null)===(payload.routine_id||null)&&existingDate===payloadDate;
+ }
+ return true;
 }
 async function syncCloudRows(table,rows,makePayload){
  for(const row of rows){
   const payload=makePayload(row);
-  const {data:existing,error:readError}=await supabaseClient.from(table).select('id,updated_at').eq('id',row.cloud_id).maybeSingle();
+  const columns=table==='routines'?'id,updated_at,name,exercises':'id,updated_at,name,exercises,routine_id,date';
+  const {data:existing,error:readError}=await supabaseClient.from(table).select(columns).eq('id',row.cloud_id).maybeSingle();
   if(readError)throw readError;
   if(!existing){
    const {data,error}=await supabaseClient.from(table).insert(payload).select('id,updated_at').single();
    if(error)throw error;
    row.updated_at=data.updated_at;
-   localStorage.setItem(storageKey(),JSON.stringify(db));
   }else{
+   if(cloudPayloadMatches(table,existing,payload)){
+    row.updated_at=existing.updated_at;
+    continue;
+   }
    if(!row.updated_at)throw new Error('Conflicto de sincronización: falta la versión local de un registro. No se han sobrescrito datos; vuelve a cargar la aplicación.');
    const {data,error}=await supabaseClient.from(table).update(payload).eq('id',row.cloud_id).eq('updated_at',row.updated_at).select('id,updated_at').maybeSingle();
    if(error)throw error;
    if(!data)throw new Error('Otro dispositivo ha modificado este registro. Tus datos locales se conservan; vuelve a cargar la aplicación para sincronizar la versión más reciente.');
    row.updated_at=data.updated_at;
-   localStorage.setItem(storageKey(),JSON.stringify(db));
   }
+  localStorage.setItem(storageKey(),JSON.stringify(db));
  }
 }
 function queueCloudSave(){
