@@ -280,8 +280,7 @@ function selectNutritionFood(index){
  document.getElementById('foodBarcode').value=p.code||'';
  renderFoodPreview();
  document.getElementById('barcodeResult').textContent='Alimento cargado. Revisa los valores, especialmente si son orientativos, y ajusta la cantidad antes de añadirlo.';
- statusMessage='Seleccionado: '+name+'. Ahora indica la cantidad que has comido y pulsa «Añadir al diario».';
- document.getElementById('nutritionFoodSearchStatus').textContent=statusMessage;
+ document.getElementById('nutritionFoodSearchStatus').textContent='Seleccionado: '+name+'. Ahora indica la cantidad que has comido y pulsa «Añadir al diario».';
  document.getElementById('foodGrams').focus();
  document.getElementById('foodGrams').select();
 }
