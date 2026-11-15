@@ -34,7 +34,7 @@ function renderNutrition(){
  const meals=['Desayuno','Media mañana','Comida','Merienda','Cena','Otros'];
  document.getElementById('nutritionDiary').innerHTML=entries.length?meals.map(meal=>{
   const items=entries.filter(e=>e.meal===meal);
-  return items.length?'<div class="history-item"><strong>'+meal+'</strong>'+items.map(e=>'<div class="row" style="padding:8px 0;gap:8px"><div><strong>'+esc(e.name)+'</strong><div class="hint">'+nutritionEntryQuantity(e)+' · '+Math.round(e.kcal)+' kcal · P '+e.protein.toFixed(1)+' g · HC '+e.carbs.toFixed(1)+' g · G '+e.fat.toFixed(1)+' g</div></div><button class="btn danger small" onclick="deleteNutritionEntry(\''+e.id+'\')">×</button></div>').join('')+'</div>':'';
+  return items.length?'<div class="history-item"><strong>'+meal+'</strong>'+items.map(e=>'<div class="row" style="padding:8px 0;gap:8px"><div><strong>'+esc(e.name)+'</strong><div class="hint">'+nutritionEntryQuantity(e)+' · '+Math.round(e.kcal)+' kcal · P '+e.protein.toFixed(1)+' g · HC '+e.carbs.toFixed(1)+' g · G '+e.fat.toFixed(1)+' g</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn secondary small" onclick="editNutritionEntry(\''+e.id+'\')">Editar</button><button class="btn danger small" onclick="deleteNutritionEntry(\''+e.id+'\')">×</button></div></div>').join('')+'</div>':'';
  }).join(''):'<div class="empty">Todavía no has añadido alimentos para este día.</div>';
 }
 function toggleNutritionGoals(show){
@@ -173,6 +173,30 @@ function stopBarcodeCamera(){
  if(barcodeStream){barcodeStream.getTracks().forEach(t=>t.stop());barcodeStream=null}
  const video=document.getElementById('barcodeVideo');if(video)video.srcObject=null;
  const camera=document.getElementById('barcodeCamera');if(camera)camera.style.display='none';
+}
+function editNutritionEntry(id){
+ const entry=nutritionData.entries.find(e=>e.id===id);if(!entry)return;
+ const amount=Number(entry.amount??entry.grams)||1;
+ const meals=['Desayuno','Media mañana','Comida','Merienda','Cena','Otros'];
+ openModal('<h2>Editar alimento</h2><div class="stack"><div class="field"><label>Alimento</label><input id="nutritionEditName" value="'+esc(entry.name)+'" maxlength="120"></div><div class="field"><label>Comida</label><select id="nutritionEditMeal">'+meals.map(m=>'<option value="'+m+'" '+(entry.meal===m?'selected':'')+'>'+m+'</option>').join('')+'</select></div><div class="field"><label>Cantidad ('+esc(entry.unit||'g')+')</label><input id="nutritionEditAmount" type="number" min="0.01" step="any" value="'+amount+'" oninput="renderNutritionEditPreview(\''+id+'\')"></div><div class="card stat" id="nutritionEditPreview" aria-live="polite"></div><p class="hint">Al cambiar la cantidad, las calorías y los macros se ajustan proporcionalmente a los valores originales.</p></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveNutritionEntryEdit(\''+id+'\')">Guardar cambios</button></div>');
+ renderNutritionEditPreview(id);
+}
+function renderNutritionEditPreview(id){
+ const entry=nutritionData.entries.find(e=>e.id===id),box=document.getElementById('nutritionEditPreview');if(!entry||!box)return;
+ const oldAmount=Number(entry.amount??entry.grams)||1,newAmount=Number(document.getElementById('nutritionEditAmount')?.value);
+ if(!Number.isFinite(newAmount)||newAmount<=0){box.textContent='Introduce una cantidad válida.';return}
+ const ratio=newAmount/oldAmount;
+ box.innerHTML='<strong>Esta cantidad aporta:</strong> '+Math.round(entry.kcal*ratio)+' kcal · Proteínas '+(entry.protein*ratio).toFixed(1)+' g · Hidratos '+(entry.carbs*ratio).toFixed(1)+' g · Grasas '+(entry.fat*ratio).toFixed(1)+' g';
+}
+function saveNutritionEntryEdit(id){
+ const entry=nutritionData.entries.find(e=>e.id===id);if(!entry)return;
+ const name=document.getElementById('nutritionEditName').value.trim(),meal=document.getElementById('nutritionEditMeal').value,amount=Number(document.getElementById('nutritionEditAmount').value);
+ if(!name){toast('Escribe el nombre del alimento');return}
+ if(!Number.isFinite(amount)||amount<=0){toast('Introduce una cantidad válida');return}
+ const oldAmount=Number(entry.amount??entry.grams)||1,ratio=amount/oldAmount;
+ entry.name=name;entry.meal=meal;entry.amount=amount;
+ entry.kcal*=ratio;entry.protein*=ratio;entry.carbs*=ratio;entry.fat*=ratio;
+ saveNutritionData();closeModal();renderNutrition();toast('Alimento actualizado');
 }
 function deleteNutritionEntry(id){nutritionData.entries=nutritionData.entries.filter(e=>e.id!==id);saveNutritionData();renderNutrition();toast('Alimento eliminado')}
 function initNutrition(){loadNutritionData();updateFoodUnitUI();if(document.getElementById('nutritionDate'))document.getElementById('nutritionDate').value=new Date().toISOString().slice(0,10);renderNutrition()}
