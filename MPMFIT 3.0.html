@@ -112,6 +112,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 const KEY='mpmfit_v1';
 const ACCOUNT_KEY_PREFIX='mpmfit_v1_user_';
 const PENDING_DELETE_PREFIX='mpmfit_v1_pending_deletes_';
+const TRAINING_DRAFT_PREFIX='mpmfit_v1_training_draft_';
 const LEGACY_OWNER_KEY='mpmfit_v1_legacy_owner';
 const SUPABASE_URL='https://lytssgscurteyzgwkjvp.supabase.co';
 const SUPABASE_KEY='sb_publishable_TKAuKIfsuhOErQ5FvsF6LA_kxOGLc06';
@@ -121,6 +122,10 @@ let db=loadDB(KEY), activeTraining=[], timerRemaining=90, timerInterval=null, ca
 function emptyDB(){return {routines:[],sessions:[]}}
 function loadDB(key){try{const value=JSON.parse(localStorage.getItem(key));return value&&Array.isArray(value.routines)&&Array.isArray(value.sessions)?value:emptyDB()}catch(e){return emptyDB()}}
 function storageKey(){return currentUser?ACCOUNT_KEY_PREFIX+currentUser.id:KEY+'_guest'}
+function trainingDraftKey(){return TRAINING_DRAFT_PREFIX+(currentUser?.id||'guest')}
+function persistTrainingDraft(){const routine=db.routines.find(r=>r.id===(document.getElementById('trainRoutine')?.value||''));const draft={date:document.getElementById('trainDate')?.value||'',routine_cloud_id:routine?.cloud_id||null,exercises:activeTraining};if(!activeTraining.length){localStorage.removeItem(trainingDraftKey());return}localStorage.setItem(trainingDraftKey(),JSON.stringify(draft))}
+function restoreTrainingDraft(){try{const raw=localStorage.getItem(trainingDraftKey());if(!raw)return false;const draft=JSON.parse(raw);if(!draft||!Array.isArray(draft.exercises)||!draft.exercises.length)return false;const routine=db.routines.find(r=>draft.routine_cloud_id&&r.cloud_id===draft.routine_cloud_id);activeTraining=draft.exercises;document.getElementById('trainRoutine').value=routine?.id||'';if(draft.date)document.getElementById('trainDate').value=draft.date;renderTraining();toast('Se ha recuperado tu entrenamiento sin guardar');return true}catch(e){console.error('No se pudo recuperar el entrenamiento en curso',e);return false}}
+function clearTrainingDraft(){localStorage.removeItem(trainingDraftKey())}
 function pendingDeleteKey(){return PENDING_DELETE_PREFIX+(currentUser?.id||'guest')}
 function loadPendingDeletes(){try{return JSON.parse(localStorage.getItem(pendingDeleteKey()))||{routines:[],workouts:[]}}catch(e){return {routines:[],workouts:[]}}}
 function persistPendingDeletes(value){localStorage.setItem(pendingDeleteKey(),JSON.stringify(value))}
@@ -177,6 +182,8 @@ async function activateUser(user){
   db.sessions=mergeByCloudId(db.sessions,remoteSessions);
   localStorage.setItem(accountKey,JSON.stringify(db));
   cloudReady=true;
+  activeTraining=[];
+  restoreTrainingDraft();
   await queueCloudSave();
   renderAll();setupTraining();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
@@ -218,10 +225,6 @@ function queueCloudSave(){
   ensureCloudIds();
   await syncCloudRows('routines',db.routines,r=>({id:r.cloud_id,user_id:uidUser,name:r.name,exercises:r.exercises}));
   await syncCloudRows('workouts',db.sessions,s=>{
-   if(!s.routine_cloud_id){
-    const linked=db.routines.find(r=>r.name===s.routine);
-    if(linked)s.routine_cloud_id=linked.cloud_id;
-   }
    return {id:s.cloud_id,user_id:uidUser,routine_id:s.routine_cloud_id||null,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises};
   });
   localStorage.setItem(storageKey(),JSON.stringify(db));
@@ -306,10 +309,10 @@ function loadTrainingRoutine(){
   const previous=lastExerciseData(e.name),oldSets=previous?.sets||[];
   return {name:e.name,muscle:e.muscle,sets:Array.from({length:e.sets},(_,i)=>({reps:oldSets[i]?.reps??(parseInt(e.reps)||''),weight:oldSets[i]?.weight??'',rir:oldSets[i]?.rir??'',done:false}))};
  });
- renderTraining();
+ renderTraining();persistTrainingDraft();
 }
 function addFreeExercise(){openModal(`<h2>Añadir ejercicio a la sesión</h2><div class="stack"><div class="field"><label>Ejercicio</label><input id="freeName" placeholder="Ej. Curl bíceps mancuerna"></div><div class="formgrid"><div class="field"><label>Series</label><input id="freeSets" type="number" value="3" min="1" max="20"></div><div class="field"><label>Repeticiones</label><input id="freeReps" value="10"></div><div class="field fullfield"><label>Grupo muscular</label><input id="freeMuscle" placeholder="Ej. Bíceps"></div></div></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveFreeExercise()">Añadir</button></div>`)}
-function saveFreeExercise(){let name=document.getElementById('freeName').value.trim();if(!name)return toast('Escribe el ejercicio');let n=Math.max(1,Math.min(20,Number(document.getElementById('freeSets').value)||3)),reps=document.getElementById('freeReps').value;activeTraining.push({name,muscle:document.getElementById('freeMuscle').value||'—',sets:Array.from({length:n},()=>({reps,weight:'',rir:'',done:false}))});closeModal();renderTraining()}
+function saveFreeExercise(){let name=document.getElementById('freeName').value.trim();if(!name)return toast('Escribe el ejercicio');let n=Math.max(1,Math.min(20,Number(document.getElementById('freeSets').value)||3)),reps=document.getElementById('freeReps').value;activeTraining.push({name,muscle:document.getElementById('freeMuscle').value||'—',sets:Array.from({length:n},()=>({reps,weight:'',rir:'',done:false}))});closeModal();renderTraining();persistTrainingDraft()}
 function renderTraining(){
  let box=document.getElementById('trainingExercises');
  if(!activeTraining.length){box.innerHTML='<div class="empty">Selecciona una rutina o añade un ejercicio para comenzar.</div>';return}
@@ -319,16 +322,16 @@ function renderTraining(){
   return `<div class="exercise-block"><div class="row"><div><h3>${esc(e.name)}</h3><small class="muted">${esc(e.muscle||'')}</small><div class="hint">${esc(note)}</div></div><button class="btn ghost small" onclick="removeTrainingExercise(${i})">Quitar</button></div><div class="sethead" style="margin-top:12px"><span>Serie</span><span>Reps</span><span>Kg</span><span>RIR</span><span>✓</span></div>${e.sets.map((s,j)=>`<div class="setrow"><span style="text-align:center;color:var(--muted)">${j+1}</span><input aria-label="Repeticiones" type="number" min="0" placeholder="Reps" value="${esc(s.reps)}" onchange="updateSet(${i},${j},'reps',this.value)"><input aria-label="Peso" type="number" min="0" step=".5" placeholder="Kg" value="${esc(s.weight)}" onchange="updateSet(${i},${j},'weight',this.value)"><input aria-label="RIR" type="number" min="0" max="10" placeholder="RIR" value="${esc(s.rir)}" onchange="updateSet(${i},${j},'rir',this.value)"><input class="check" type="checkbox" ${s.done?'checked':''} onchange="updateSet(${i},${j},'done',this.checked)"></div>`).join('')}<button class="btn ghost small" style="margin-top:8px" onclick="addSet(${i})">＋ Añadir serie</button></div>`;
  }).join('');
 }
-function updateSet(i,j,k,v){activeTraining[i].sets[j][k]=v;if(k==='done'&&v)startTimer()}
+function updateSet(i,j,k,v){activeTraining[i].sets[j][k]=v;persistTrainingDraft();if(k==='done'&&v)startTimer()}
 function formatTimer(){const m=Math.floor(timerRemaining/60),s=timerRemaining%60;document.getElementById('timerClock').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function setTimerDuration(){timerRemaining=Number(document.getElementById('timerDuration').value)||90;stopTimer();formatTimer()}
 function startTimer(){stopTimer();if(timerRemaining<=0)timerRemaining=Number(document.getElementById('timerDuration').value)||90;formatTimer();document.getElementById('timerButton').textContent='Ⅱ Pausar';timerInterval=setInterval(()=>{timerRemaining--;formatTimer();if(timerRemaining<=0){stopTimer();timerRemaining=0;formatTimer();document.getElementById('timerButton').textContent='▶ Iniciar';toast('¡Descanso terminado!');try{if(navigator.vibrate)navigator.vibrate([180,80,180])}catch(e){}}},1000)}
 function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null}const b=document.getElementById('timerButton');if(b)b.textContent='▶ Iniciar'}
 function toggleTimer(){if(timerInterval)stopTimer();else startTimer()}
 function resetTimer(){stopTimer();timerRemaining=Number(document.getElementById('timerDuration').value)||90;formatTimer()}
-function addSet(i){activeTraining[i].sets.push({reps:'',weight:'',rir:'',done:false});renderTraining()}
-function removeTrainingExercise(i){activeTraining.splice(i,1);renderTraining()}
-function saveSession(){let exercises=activeTraining.map(e=>({...e,sets:e.sets.map(s=>({...s}))})).filter(e=>e.name);if(!exercises.length)return toast('Añade al menos un ejercicio');ensureCloudIds();let date=document.getElementById('trainDate').value||new Date().toISOString().slice(0,10),selectedRoutine=db.routines.find(r=>r.id===document.getElementById('trainRoutine').value);db.sessions.unshift({id:uid(),date,routine:selectedRoutine?.name||'Entrenamiento libre',routine_cloud_id:selectedRoutine?.cloud_id||null,exercises});persist();activeTraining=[];document.getElementById('trainRoutine').value='';renderTraining();toast('Entrenamiento guardado')}
+function addSet(i){activeTraining[i].sets.push({reps:'',weight:'',rir:'',done:false});renderTraining();persistTrainingDraft()}
+function removeTrainingExercise(i){activeTraining.splice(i,1);renderTraining();persistTrainingDraft()}
+function saveSession(){let exercises=activeTraining.map(e=>({...e,sets:e.sets.map(s=>({...s}))})).filter(e=>e.name);if(!exercises.length)return toast('Añade al menos un ejercicio');ensureCloudIds();let date=document.getElementById('trainDate').value||new Date().toISOString().slice(0,10),selectedRoutine=db.routines.find(r=>r.id===document.getElementById('trainRoutine').value);db.sessions.unshift({id:uid(),date,routine:selectedRoutine?.name||'Entrenamiento libre',routine_cloud_id:selectedRoutine?.cloud_id||null,exercises});clearTrainingDraft();persist();activeTraining=[];document.getElementById('trainRoutine').value='';renderTraining();toast('Entrenamiento guardado')}
 function renderHistory(){let box=document.getElementById('historyList');if(!db.sessions.length){box.innerHTML='<div class="empty">Todavía no hay sesiones registradas.</div>';return}box.innerHTML=db.sessions.map(s=>`<div class="history-item"><div class="row"><div><strong>${esc(s.routine)}</strong><div class="muted">${new Date(s.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})} · ${s.exercises.length} ejercicios</div></div><button class="btn danger small" onclick="deleteSession('${s.id}')">Eliminar</button></div><div class="muted" style="margin-top:8px">${s.exercises.map(e=>`${esc(e.name)} (${e.sets.length} series)`).join(' · ')}</div></div>`).join('')}
 function deleteSession(id){if(!confirm('¿Eliminar esta sesión del historial?'))return;const session=db.sessions.find(s=>s.id===id);if(session?.cloud_id)addPendingDelete('workouts',session.cloud_id);db.sessions=db.sessions.filter(s=>s.id!==id);persist();renderHistory()}
 function totalVolume(){return db.sessions.reduce((sum,s)=>sum+s.exercises.reduce((a,e)=>a+e.sets.reduce((b,x)=>b+(Number(x.weight)||0)*(Number(x.reps)||0),0),0),0)}
@@ -387,7 +390,7 @@ renderAll();setupTraining();formatTimer();
  if(session?.user)await activateUser(session.user);
  else{document.getElementById('authGate').style.display='flex';setSyncStatus('● SIN CONECTAR')}
  supabaseClient.auth.onAuthStateChange((event)=>{
-  if(event==='SIGNED_OUT'){currentUser=null;cloudReady=false;document.getElementById('authGate').style.display='flex';document.getElementById('accountButton').textContent='Iniciar sesión';setSyncStatus('● SIN CONECTAR')}
+  if(event==='SIGNED_OUT'){currentUser=null;cloudReady=false;activeTraining=[];document.getElementById('authGate').style.display='flex';document.getElementById('accountButton').textContent='Iniciar sesión';setSyncStatus('● SIN CONECTAR')}
  });
 })();
 </script>
