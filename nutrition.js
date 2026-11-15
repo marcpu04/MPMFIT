@@ -34,7 +34,7 @@ function renderNutrition(){
  const meals=['Desayuno','Media mañana','Comida','Merienda','Cena','Otros'];
  document.getElementById('nutritionDiary').innerHTML=entries.length?meals.map(meal=>{
   const items=entries.filter(e=>e.meal===meal);
-  return items.length?'<div class="history-item"><strong>'+meal+'</strong>'+items.map(e=>'<div class="row" style="padding:8px 0;gap:8px"><div><strong>'+esc(e.name)+'</strong><div class="hint">'+nutritionEntryQuantity(e) · '+Math.round(e.kcal)+' kcal · P '+e.protein.toFixed(1)+' g · HC '+e.carbs.toFixed(1)+' g · G '+e.fat.toFixed(1)+' g</div></div><button class="btn danger small" onclick="deleteNutritionEntry(\''+e.id+'\')">×</button></div>').join('')+'</div>':'';
+  return items.length?'<div class="history-item"><strong>'+meal+'</strong>'+items.map(e=>'<div class="row" style="padding:8px 0;gap:8px"><div><strong>'+esc(e.name)+'</strong><div class="hint">'+nutritionEntryQuantity(e)+' · '+Math.round(e.kcal)+' kcal · P '+e.protein.toFixed(1)+' g · HC '+e.carbs.toFixed(1)+' g · G '+e.fat.toFixed(1)+' g</div></div><button class="btn danger small" onclick="deleteNutritionEntry(\''+e.id+'\')">×</button></div>').join('')+'</div>':'';
  }).join(''):'<div class="empty">Todavía no has añadido alimentos para este día.</div>';
 }
 function toggleNutritionGoals(show){
