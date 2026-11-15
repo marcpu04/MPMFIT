@@ -3,7 +3,7 @@
 // de nutrición se incorporará cuando se apruebe y pruebe su esquema independiente.
 let nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[]};
 let barcodeStream=null,barcodeFrame=null;
-let nutritionAddLocked=false,barcodeLookupInProgress=false,barcodeCameraStarting=false;
+let nutritionAddLocked=false,barcodeLookupInProgress=false,barcodeCameraStarting=false,currentFoodUnit=null;
 function nutritionStorageKey(){return 'mpmfit_nutrition_v1_'+(currentUser?.id||'guest')}
 function loadNutritionData(){
  try{
@@ -77,6 +77,12 @@ function addNutritionEntry(item){
 }
 function updateFoodUnitUI(){
  const unit=document.getElementById('foodUnit')?.value||'g';
+ if(currentFoodUnit&&currentFoodUnit!==unit){
+  ['foodKcal','foodProtein','foodCarbs','foodFat'].forEach(id=>{const field=document.getElementById(id);if(field)field.value=''});
+  const barcode=document.getElementById('foodBarcode');if(barcode)delete barcode.dataset.lastBarcode;
+  const result=document.getElementById('barcodeResult');if(result)result.textContent='Has cambiado la unidad. Introduce los valores nutricionales correspondientes a la nueva referencia.';
+ }
+ currentFoodUnit=unit;
  const basis=document.getElementById('foodBasis');
  const amountLabel=document.getElementById('foodAmountLabel');
  if(basis){
@@ -94,7 +100,7 @@ function addManualFood(){
  const name=document.getElementById('foodName').value.trim();
  if(!name){toast('Escribe el nombre del alimento');return}
  const values=['foodKcal','foodProtein','foodCarbs','foodFat'].map(n=>Number(document.getElementById(n).value));
- if(values.some(v=>!Number.isFinite(v)||v<0)||!document.getElementById('foodKcal').value){toast('Introduce calorías y macros por cada 100 g');return}
+ if(values.some(v=>!Number.isFinite(v)||v<0)||!document.getElementById('foodKcal').value){toast('Introduce calorías y macros según la referencia seleccionada');return}
  const amount=Number(document.getElementById('foodGrams').value),unit=document.getElementById('foodUnit').value,basis=document.getElementById('foodBasis').value;
  if(!Number.isFinite(amount)||amount<=0){toast('Introduce una cantidad válida');return}
  const compatible={g:'100g',ml:'100ml',unit:'unit',portion:'portion'};
