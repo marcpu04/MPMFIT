@@ -204,7 +204,7 @@ function saveNutritionEntryEdit(id){
 function nutritionId(){return crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)}
 function toggleNutritionFavorite(entryId){
  const entry=nutritionData.entries.find(e=>e.id===entryId);if(!entry)return;
- const index=nutritionData.favorites.findIndex(f=>f.sourceId===entryId);
+ const index=nutritionData.favorites.findIndex(f=>f.sourceId===entryId||normalizeNutritionSearch(f.name)===normalizeNutritionSearch(entry.name));
  if(index>=0){nutritionData.favorites.splice(index,1);toast('Favorito eliminado')}
  else{nutritionData.favorites.push({id:nutritionId(),sourceId:entry.id,name:entry.name,amount:entry.amount,unit:entry.unit,basis:entry.basis,kcal:entry.kcal,protein:entry.protein,carbs:entry.carbs,fat:entry.fat,barcode:entry.barcode||null});toast('Alimento guardado en favoritos')}
  saveNutritionData();renderNutrition();
@@ -228,7 +228,7 @@ function addSavedNutritionMeal(id){
  saved.items.forEach(item=>nutritionData.entries.push({...item,id:nutritionId(),date:nutritionToday(),meal}));
  saveNutritionData();renderNutrition();toast('Comida añadida al diario');
 }
-function deleteSavedNutritionMeal(id){nutritionData.savedMeals=nutritionData.savedMeals.filter(x=>x.id!==id);saveNutritionData();renderNutritionLibrary();toast('Comida guardada eliminada')}
+function deleteSavedNutritionMeal(id){nutritionData.savedMeals=nutritionData.savedMeals.filter(x=>x.id!==id);nutritionData.mealPlans=nutritionData.mealPlans.filter(p=>!(p.type==='meal'&&p.itemId===id));saveNutritionData();renderNutritionLibrary();renderNutritionPlanner();toast('Comida guardada eliminada')}
 function createNutritionRecipe(){
  const date=nutritionToday(),entries=nutritionData.entries.filter(e=>e.date===date);
  if(entries.length<1){toast('Añade primero los ingredientes al diario del día');return}
@@ -251,7 +251,7 @@ function addNutritionRecipe(id){
  nutritionData.entries.push({id:nutritionId(),date:nutritionToday(),meal,name:r.name+' (1 ración)',amount:1,unit:'portion',basis:'portion',kcal:p.kcal,protein:p.protein,carbs:p.carbs,fat:p.fat,recipeId:r.id});
  saveNutritionData();renderNutrition();toast('Ración de receta añadida');
 }
-function deleteNutritionRecipe(id){nutritionData.recipes=nutritionData.recipes.filter(x=>x.id!==id);saveNutritionData();renderNutritionLibrary();toast('Receta eliminada')}
+function deleteNutritionRecipe(id){nutritionData.recipes=nutritionData.recipes.filter(x=>x.id!==id);nutritionData.mealPlans=nutritionData.mealPlans.filter(p=>!(p.type==='recipe'&&p.itemId===id));saveNutritionData();renderNutritionLibrary();renderNutritionPlanner();toast('Receta eliminada')}
 function renderNutritionLibrary(){
  const root=document.getElementById('nutritionLibrary');if(!root)return;
  const quickMeal=document.getElementById('nutritionQuickMeal')?.value||'Comida';
