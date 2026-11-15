@@ -275,6 +275,7 @@ async function activateUser(user){
   restoreTrainingDraft();
   await queueCloudSave();
   if(typeof initNutrition==='function')initNutrition();
+  if(typeof syncUserAppData==='function')await syncUserAppData();
   renderAll();
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
 }
@@ -520,5 +521,6 @@ if(LOCAL_DEMO_MODE){
 }
 </script>
 <script src="nutrition.js"></script>
+<script src="cloud-sync.js"></script>
 </body>
 </html>
