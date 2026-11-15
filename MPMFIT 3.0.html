@@ -200,7 +200,7 @@ const ACCOUNT_KEY_PREFIX='mpmfit_v1_user_';
 const PENDING_DELETE_PREFIX='mpmfit_v1_pending_deletes_';
 const TRAINING_DRAFT_PREFIX='mpmfit_v1_training_draft_';
 const LEGACY_OWNER_KEY='mpmfit_v1_legacy_owner';
-const LOCAL_DEMO_MODE=['localhost','127.0.0.1'].includes(window.location.hostname);
+const LOCAL_DEMO_MODE=new URLSearchParams(window.location.search).get('demo')==='1';
 const SUPABASE_URL='https://lytssgscurteyzgwkjvp.supabase.co';
 const SUPABASE_KEY='sb_publishable_TKAuKIfsuhOErQ5FvsF6LA_kxOGLc06';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
