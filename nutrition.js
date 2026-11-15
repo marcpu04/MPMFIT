@@ -513,3 +513,25 @@ function saveBodyWeight(){
 function deleteBodyWeight(id){
  const entries=getBodyWeightEntries().filter(x=>x.id!==id);localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));renderBodyWeight();toast('Registro eliminado');
 }
+
+// Seguimiento de perímetros corporales.
+
+function bodyMeasureStorageKey(){return 'mpmfit_bodymeasure_v1_'+(currentUser?.id||'guest')}
+function getBodyMeasureEntries(){try{const data=JSON.parse(localStorage.getItem(bodyMeasureStorageKey())||'[]');return Array.isArray(data)?data.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)):[]}catch(e){return []}}
+function renderBodyMeasurements(){
+ const dateInput=document.getElementById('bodyMeasureDate'),summary=document.getElementById('bodyMeasureSummary'),history=document.getElementById('bodyMeasureHistory');if(!dateInput||!summary||!history)return;
+ if(!dateInput.value){const now=new Date();dateInput.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
+ const labels={waist:'Cintura',chest:'Pecho',arm:'Brazo',thigh:'Muslo'},entries=getBodyMeasureEntries().sort((a,b)=>a.date.localeCompare(b.date));
+ if(!entries.length){summary.innerHTML='<div class="empty">Aún no hay medidas guardadas. Puedes empezar por la cintura o registrar solo las que te interesen.</div>';history.innerHTML='';return}
+ const latest=entries[entries.length-1],previous=entries.length>1?entries[entries.length-2]:null;
+ summary.innerHTML='<div class="grid">'+Object.entries(labels).filter(([key])=>Number.isFinite(Number(latest[key]))&&latest[key]!==null).map(([key,label])=>{const old=previous&&Number.isFinite(Number(previous[key]))?Number(previous[key]):null,now=Number(latest[key]),delta=old===null?null:now-old;return '<div class="measure-stat"><span class="hint">'+label+'</span><b>'+now.toFixed(1)+' cm</b><span class="hint">'+(delta===null?'Sin comparación anterior':(delta>0?'+':'')+delta.toFixed(1)+' cm desde el registro anterior')+'</span></div>'}).join('')+'</div><div class="hint" style="margin-top:8px">Última medición: '+new Date(latest.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})+'</div>';
+ history.innerHTML='<h3 style="margin-top:18px">Historial de medidas</h3>'+entries.slice().reverse().slice(0,6).map(x=>{const vals=Object.entries(labels).filter(([key])=>Number.isFinite(Number(x[key]))&&x[key]!==null).map(([key,label])=>label+': '+Number(x[key]).toFixed(1)+' cm').join(' · ');return '<div class="weight-history-row"><div><strong>'+new Date(x.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})+'</strong><div class="hint">'+vals+'</div></div><button class="btn ghost small" onclick="deleteBodyMeasurements(&quot;'+x.id+'&quot;)">Eliminar</button></div>'}).join('');
+}
+function saveBodyMeasurements(){
+ const date=document.getElementById('bodyMeasureDate')?.value,fields={waist:'measureWaist',chest:'measureChest',arm:'measureArm',thigh:'measureThigh'},values={};if(!date){toast('Selecciona una fecha');return}
+ for(const [key,id] of Object.entries(fields)){const raw=document.getElementById(id)?.value;if(raw==='')continue;const value=Number(String(raw).replace(',','.'));if(!Number.isFinite(value)||value<1||value>300){toast('Revisa las medidas: deben estar entre 1 y 300 cm');return}values[key]=value}
+ if(!Object.keys(values).length){toast('Introduce al menos una medida');return}
+ const entries=getBodyMeasureEntries(),index=entries.findIndex(x=>x.date===date);if(index>=0){if(!confirm('Ya hay medidas guardadas para ese día. ¿Quieres sustituirlas?'))return;entries[index]={...values,date,id:entries[index].id}}else entries.push({...values,date,id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()});
+ localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));Object.values(fields).forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});renderBodyMeasurements();toast('Medidas guardadas');
+}
+function deleteBodyMeasurements(id){const entries=getBodyMeasureEntries().filter(x=>x.id!==id);localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));renderBodyMeasurements();toast('Medición eliminada')}
