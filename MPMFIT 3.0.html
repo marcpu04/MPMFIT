@@ -86,13 +86,16 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
    <div class="formgrid">
     <div class="field"><label>Comida</label><select id="foodMeal"><option>Desayuno</option><option>Media mañana</option><option>Comida</option><option>Merienda</option><option>Cena</option><option>Otros</option></select></div>
     <div class="field"><label>Alimento</label><input id="foodName" placeholder="Ej. Pechuga de pollo"></div>
-    <div class="field"><label>Cantidad (g)</label><input id="foodGrams" type="number" min="1" value="100"></div>
-    <div class="field"><label>Calorías por 100 g</label><input id="foodKcal" type="number" min="0" step="0.1" placeholder="kcal"></div>
-    <div class="field"><label>Proteínas por 100 g</label><input id="foodProtein" type="number" min="0" step="0.1" placeholder="g"></div>
-    <div class="field"><label>Hidratos por 100 g</label><input id="foodCarbs" type="number" min="0" step="0.1" placeholder="g"></div>
-    <div class="field"><label>Grasas por 100 g</label><input id="foodFat" type="number" min="0" step="0.1" placeholder="g"></div>
+    <div class="field"><label>Unidad de cantidad</label><select id="foodUnit" onchange="updateFoodUnitUI()"><option value="g">Gramos (g)</option><option value="ml">Mililitros (ml)</option><option value="unit">Unidades</option><option value="portion">Raciones</option></select></div>
+    <div class="field"><label id="foodAmountLabel">Cantidad (g)</label><input id="foodGrams" type="number" min="0.01" step="0.01" value="100" oninput="renderFoodPreview()"></div>
+    <div class="field"><label>Referencia de los valores nutricionales</label><select id="foodBasis"><option value="100g">Por 100 g</option></select><span class="hint" id="foodReferenceHint">Introduce los valores nutricionales por cada 100 g.</span></div>
+    <div class="field"><label>Calorías según referencia</label><input id="foodKcal" type="number" min="0" step="0.1" placeholder="kcal" oninput="renderFoodPreview()"></div>
+    <div class="field"><label>Proteínas según referencia</label><input id="foodProtein" type="number" min="0" step="0.1" placeholder="g" oninput="renderFoodPreview()"></div>
+    <div class="field"><label>Hidratos según referencia</label><input id="foodCarbs" type="number" min="0" step="0.1" placeholder="g" oninput="renderFoodPreview()"></div>
+    <div class="field"><label>Grasas según referencia</label><input id="foodFat" type="number" min="0" step="0.1" placeholder="g" oninput="renderFoodPreview()"></div>
    </div>
-   <div class="row" style="flex-wrap:wrap;margin-top:14px"><button class="btn" onclick="addManualFood()">＋ Añadir al diario</button><span class="hint">Introduce los valores de la etiqueta nutricional por cada 100 g.</span></div>
+   <div class="card stat" id="foodNutritionPreview" aria-live="polite" style="margin-top:12px">Introduce una cantidad y los valores nutricionales para ver el cálculo.</div>
+   <div class="row" style="flex-wrap:wrap;margin-top:14px"><button class="btn" onclick="addManualFood()">＋ Añadir al diario</button><span class="hint">El cálculo se actualiza automáticamente antes de guardar.</span></div>
   </div>
   <div class="card full">
    <h3>Escáner de código de barras</h3>
