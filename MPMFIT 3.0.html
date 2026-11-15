@@ -82,6 +82,16 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
    <div id="nutritionSummary" class="grid" style="margin-top:12px"></div>
   </div>
   <div class="card full">
+   <h3>Buscar alimento</h3>
+   <div class="hint">Busca alimentos por nombre y selecciona una opción para cargar sus valores nutricionales automáticamente.</div>
+   <div class="filterrow" style="margin-top:12px">
+    <input id="nutritionFoodSearch" type="search" placeholder="Ej. arroz, pechuga de pollo, plátano" onkeydown="if(event.key==='Enter'){event.preventDefault();searchNutritionFoods()}">
+    <button class="btn secondary" id="nutritionFoodSearchButton" onclick="searchNutritionFoods()">Buscar alimento</button>
+   </div>
+   <div id="nutritionFoodSearchStatus" class="hint" aria-live="polite">La búsqueda utiliza la base de datos abierta Open Food Facts. Comprueba siempre los datos antes de guardar.</div>
+   <div id="nutritionFoodSearchResults" class="catalog-grid" style="margin-top:10px"></div>
+  </div>
+  <div class="card full">
    <h3>Añadir alimento</h3>
    <div class="formgrid">
     <div class="field"><label>Comida</label><select id="foodMeal"><option>Desayuno</option><option>Media mañana</option><option>Comida</option><option>Merienda</option><option>Cena</option><option>Otros</option></select></div>
