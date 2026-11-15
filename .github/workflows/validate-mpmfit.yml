@@ -34,4 +34,6 @@ jobs:
           PY
 
       - name: Check JavaScript syntax
-        run: node --check /tmp/mpmfit-inline.js
+        run: |
+          node --check /tmp/mpmfit-inline.js
+          node --check nutrition.js
