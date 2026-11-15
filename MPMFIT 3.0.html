@@ -161,10 +161,17 @@ async function activateUser(user){
   const remoteRoutines=(routines||[]).filter(r=>!pending.routines.includes(r.id)).map(r=>({id:uid(),cloud_id:r.id,name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]}));
   const remoteSessions=(workouts||[]).filter(w=>!pending.workouts.includes(w.id)).map(w=>({id:uid(),cloud_id:w.id,routine_cloud_id:w.routine_id||null,date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}));
   const mergeByCloudId=(localRows,remoteRows)=>{
-   const merged=localRows.slice();
-   const known=new Set(merged.map(x=>x.cloud_id).filter(Boolean));
-   remoteRows.forEach(remote=>{if(!known.has(remote.cloud_id))merged.push(remote)});
-   return merged;
+   const byId=new Map(localRows.filter(x=>x.cloud_id).map(x=>[x.cloud_id,x]));
+   remoteRows.forEach(remote=>{
+    const local=byId.get(remote.cloud_id);
+    if(!local){localRows.push(remote);return}
+    const localTime=local.updated_at?Date.parse(local.updated_at):0;
+    const remoteTime=remote.updated_at?Date.parse(remote.updated_at):0;
+    if(!local.updated_at||remoteTime>localTime){
+     Object.assign(local,remote);
+    }
+   });
+   return localRows;
   };
   db.routines=mergeByCloudId(db.routines,remoteRoutines);
   db.sessions=mergeByCloudId(db.sessions,remoteSessions);
@@ -173,6 +180,24 @@ async function activateUser(user){
   await queueCloudSave();
   renderAll();setupTraining();setSyncStatus('● SINCRONIZADO');toast('MPMFIT conectado a la nube');
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
+}
+async function syncCloudRows(table,rows,makePayload){
+ for(const row of rows){
+  const payload=makePayload(row);
+  const {data:existing,error:readError}=await supabaseClient.from(table).select('id,updated_at').eq('id',row.cloud_id).maybeSingle();
+  if(readError)throw readError;
+  if(!existing){
+   const {data,error}=await supabaseClient.from(table).insert(payload).select('id,updated_at').single();
+   if(error)throw error;
+   row.updated_at=data.updated_at;
+  }else{
+   if(!row.updated_at)throw new Error('Conflicto de sincronización: falta la versión local de un registro. No se han sobrescrito datos; vuelve a cargar la aplicación.');
+   const {data,error}=await supabaseClient.from(table).update(payload).eq('id',row.cloud_id).eq('updated_at',row.updated_at).select('id,updated_at').maybeSingle();
+   if(error)throw error;
+   if(!data)throw new Error('Otro dispositivo ha modificado este registro. Tus datos locales se conservan; vuelve a cargar la aplicación para sincronizar la versión más reciente.');
+   row.updated_at=data.updated_at;
+  }
+ }
 }
 function queueCloudSave(){
  saveQueue=saveQueue.then(async()=>{
@@ -188,16 +213,15 @@ function queueCloudSave(){
    persistPendingDeletes(pending);
   }
   ensureCloudIds();
-  if(db.routines.length){
-   const rows=db.routines.map(r=>({id:r.cloud_id,user_id:uidUser,name:r.name,exercises:r.exercises}));
-   const result=await supabaseClient.from('routines').upsert(rows,{onConflict:'id'});
-   if(result.error)throw result.error;
-  }
-  if(db.sessions.length){
-   const rows=db.sessions.map(s=>({id:s.cloud_id,user_id:uidUser,routine_id:s.routine_cloud_id||null,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises}));
-   const result=await supabaseClient.from('workouts').upsert(rows,{onConflict:'id'});
-   if(result.error)throw result.error;
-  }
+  await syncCloudRows('routines',db.routines,r=>({id:r.cloud_id,user_id:uidUser,name:r.name,exercises:r.exercises}));
+  await syncCloudRows('workouts',db.sessions,s=>{
+   if(!s.routine_cloud_id){
+    const linked=db.routines.find(r=>r.name===s.routine);
+    if(linked)s.routine_cloud_id=linked.cloud_id;
+   }
+   return {id:s.cloud_id,user_id:uidUser,routine_id:s.routine_cloud_id||null,name:s.routine||'Entrenamiento libre',date:new Date((s.date||new Date().toISOString().slice(0,10))+'T12:00:00').toISOString(),exercises:s.exercises};
+  });
+  localStorage.setItem(storageKey(),JSON.stringify(db));
   setSyncStatus('● SINCRONIZADO');
  }).catch(error=>{setSyncStatus('● ERROR AL GUARDAR');console.error(error);toast('Error de sincronización: '+(error.message||'revisa la conexión'));});
 }
