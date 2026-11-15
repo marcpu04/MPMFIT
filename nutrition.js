@@ -57,26 +57,41 @@ function saveNutritionGoals(){
  saveNutritionData();toggleNutritionGoals(false);renderNutrition();toast('Objetivos nutricionales guardados');
 }
 function addNutritionEntry(item){
- const grams=Math.max(1,Number(item.grams)||0),factor=grams/100;
- nutritionData.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:nutritionToday(),meal:document.getElementById('foodMeal').value,name:item.name,grams,kcal:item.kcal*factor,protein:item.protein*factor,carbs:item.carbs*factor,fat:item.fat*factor,barcode:item.barcode||null});
+ const amount=Math.max(0.01,Number(item.amount)||0),factor=item.basis==='100g'||item.basis==='100ml'?amount/100:amount;
+ nutritionData.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:nutritionToday(),meal:document.getElementById('foodMeal').value,name:item.name,amount,unit:item.unit,basis:item.basis,kcal:item.kcal*factor,protein:item.protein*factor,carbs:item.carbs*factor,fat:item.fat*factor,barcode:item.barcode||null});
  saveNutritionData();renderNutrition();toast('Alimento añadido al diario');
 }
+function updateFoodUnitUI(){
+ const unit=document.getElementById('foodUnit')?.value||'g';
+ const basis=document.getElementById('foodBasis');
+ const amountLabel=document.getElementById('foodAmountLabel');
+ if(basis){
+  const options={g:[['100g','Por 100 g']],ml:[['100ml','Por 100 ml']],unit:[['unit','Por unidad']],portion:[['portion','Por ración']]};
+  basis.innerHTML=options[unit].map(([v,t])=>'<option value="'+v+'">'+t+'</option>').join('');
+ }
+ if(amountLabel)amountLabel.textContent=({g:'Cantidad (g)',ml:'Cantidad (ml)',unit:'Cantidad (unidades)',portion:'Cantidad (raciones)'})[unit];
+}
+
 function addManualFood(){
  if(nutritionAddLocked)return;
  const name=document.getElementById('foodName').value.trim();
  if(!name){toast('Escribe el nombre del alimento');return}
  const values=['foodKcal','foodProtein','foodCarbs','foodFat'].map(n=>Number(document.getElementById(n).value));
  if(values.some(v=>!Number.isFinite(v)||v<0)||!document.getElementById('foodKcal').value){toast('Introduce calorías y macros por cada 100 g');return}
- const grams=nutritionNumber('foodGrams');if(!grams){toast('Introduce una cantidad válida');return}
+ const amount=Number(document.getElementById('foodGrams').value),unit=document.getElementById('foodUnit').value,basis=document.getElementById('foodBasis').value;
+ if(!Number.isFinite(amount)||amount<=0){toast('Introduce una cantidad válida');return}
+ const compatible={g:'100g',ml:'100ml',unit:'unit',portion:'portion'};
+ if(compatible[unit]!==basis){toast('La unidad y la referencia nutricional no coinciden');return}
  nutritionAddLocked=true;
  const button=document.querySelector('button[onclick="addManualFood()"]');
  if(button){button.disabled=true;button.dataset.originalText=button.textContent;button.textContent='Añadiendo…'}
- try{addNutritionEntry({name,grams,kcal:values[0],protein:values[1],carbs:values[2],fat:values[3]})}
+ try{addNutritionEntry({name,amount,unit,basis,kcal:values[0],protein:values[1],carbs:values[2],fat:values[3]})}
  finally{setTimeout(()=>{nutritionAddLocked=false;if(button){button.disabled=false;button.textContent=button.dataset.originalText||'＋ Añadir al diario'}},700)}
 }
 function fillFoodForm(product,barcode){
  document.getElementById('foodName').value=product.name||'Producto sin nombre';
  document.getElementById('foodGrams').value=100;
+ document.getElementById('foodUnit').value='g';updateFoodUnitUI();
  document.getElementById('foodKcal').value=product.kcal??'';
  document.getElementById('foodProtein').value=product.protein??'';
  document.getElementById('foodCarbs').value=product.carbs??'';
@@ -136,6 +151,6 @@ function stopBarcodeCamera(){
  const camera=document.getElementById('barcodeCamera');if(camera)camera.style.display='none';
 }
 function deleteNutritionEntry(id){nutritionData.entries=nutritionData.entries.filter(e=>e.id!==id);saveNutritionData();renderNutrition();toast('Alimento eliminado')}
-function initNutrition(){loadNutritionData();if(document.getElementById('nutritionDate'))document.getElementById('nutritionDate').value=new Date().toISOString().slice(0,10);renderNutrition()}
+function initNutrition(){loadNutritionData();updateFoodUnitUI();if(document.getElementById('nutritionDate'))document.getElementById('nutritionDate').value=new Date().toISOString().slice(0,10);renderNutrition()}
 window.addEventListener('load',()=>{if(typeof currentUser!=='undefined'&&currentUser)initNutrition()});
 window.addEventListener('beforeunload',stopBarcodeCamera);
