@@ -30,7 +30,7 @@ self.addEventListener('fetch',event=>{
    const cache=await caches.open(CACHE_NAME);
    try{
     const response=await fetch(request);
-    if(response.ok)cache.put('./MPMFIT%203.0.html',response.clone());
+    if(response.ok)cache.put(request,response.clone());
     return response;
    }catch(error){
     return (await cache.match(request))||(await cache.match('./MPMFIT%203.0.html'))||Response.error();
