@@ -8,8 +8,8 @@ function nutritionStorageKey(){return 'mpmfit_nutrition_v1_'+(currentUser?.id||'
 function loadNutritionData(){
  try{
   const saved=JSON.parse(localStorage.getItem(nutritionStorageKey()));
-  nutritionData=saved&&Array.isArray(saved.entries)?{goal:saved.goal||'maintenance',targets:saved.targets||{kcal:0,protein:0,carbs:0,fat:0},entries:saved.entries,favorites:Array.isArray(saved.favorites)?saved.favorites:[],savedMeals:Array.isArray(saved.savedMeals)?saved.savedMeals:[],recipes:Array.isArray(saved.recipes)?saved.recipes:[],mealPlans:Array.isArray(saved.mealPlans)?saved.mealPlans:[]}:{goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[]};
- }catch(e){nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[]}}
+  nutritionData=saved&&Array.isArray(saved.entries)?{goal:saved.goal||'maintenance',targets:saved.targets||{kcal:0,protein:0,carbs:0,fat:0},entries:saved.entries,favorites:Array.isArray(saved.favorites)?saved.favorites:[],savedMeals:Array.isArray(saved.savedMeals)?saved.savedMeals:[],recipes:Array.isArray(saved.recipes)?saved.recipes:[],mealPlans:Array.isArray(saved.mealPlans)?saved.mealPlans:[],quantityMemory:saved.quantityMemory&&typeof saved.quantityMemory==='object'?saved.quantityMemory:{}}:{goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[],quantityMemory:{}};
+ }catch(e){nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[],quantityMemory:{}}}
 }
 function saveNutritionData(){localStorage.setItem(nutritionStorageKey(),JSON.stringify(nutritionData))}
 function nutritionToday(){return document.getElementById('nutritionDate')?.value||new Date().toISOString().slice(0,10)}
@@ -39,6 +39,7 @@ function renderNutrition(){
  renderNutritionLibrary();
  renderNutritionPlanner();
  renderNutritionHistory();
+ renderNutritionQuick();
 }
 function toggleNutritionGoals(show){
  const form=document.getElementById('nutritionGoalsForm'),visible=show===undefined?form.style.display==='none':show;
@@ -75,6 +76,7 @@ function renderFoodPreview(){
 }
 function addNutritionEntry(item){
  const amount=Math.max(0.01,Number(item.amount)||0),factor=item.basis==='100g'||item.basis==='100ml'?amount/100:amount;
+ const normalized=normalizeNutritionSearch(item.name);nutritionData.quantityMemory=nutritionData.quantityMemory||{};nutritionData.quantityMemory[normalized]={amount,unit:item.unit,basis:item.basis};
  nutritionData.entries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:nutritionToday(),meal:document.getElementById('foodMeal').value,name:item.name,amount,unit:item.unit,basis:item.basis,kcal:item.kcal*factor,protein:item.protein*factor,carbs:item.carbs*factor,fat:item.fat*factor,barcode:item.barcode||null});
  saveNutritionData();renderNutrition();toast('Alimento añadido al diario');
 }
@@ -116,14 +118,14 @@ function addManualFood(){
 }
 function fillFoodForm(product,barcode){
  document.getElementById('foodName').value=product.name||'Producto sin nombre';
- document.getElementById('foodGrams').value=100;
+ document.getElementById('foodGrams').value=nutritionRememberedAmount(name,'g');
  document.getElementById('foodUnit').value='g';updateFoodUnitUI();
  document.getElementById('foodKcal').value=product.kcal??'';
  document.getElementById('foodProtein').value=product.protein??'';
  document.getElementById('foodCarbs').value=product.carbs??'';
  document.getElementById('foodFat').value=product.fat??'';
  renderFoodPreview();
- document.getElementById('barcodeResult').textContent='Producto encontrado: '+(product.name||'Sin nombre')+(product.brand?' · '+product.brand:'')+'. Revisa los valores y pulsa «Añadir al diario».';
+ document.getElementById('barcodeResult').innerHTML='Producto encontrado: '+esc(product.name||'Sin nombre')+(product.brand?' · '+esc(product.brand):'')+'. <button class="btn small" style="margin-top:8px" onclick="addBarcodeFoodNow()">＋ Añadir ahora</button><div class="hint">Comprueba los datos del envase.</div>';
  document.getElementById('foodBarcode').dataset.lastBarcode=barcode;
 }
 async function lookupBarcode(code){
@@ -353,7 +355,7 @@ function renderNutritionFoodSearchResults(){
   const protein=Number(n.proteins_100g),carbs=Number(n.carbohydrates_100g),fat=Number(n.fat_100g);
   const valid=v=>Number.isFinite(v)&&v>=0;
   const details=[valid(kcal)?Math.round(kcal)+' kcal':'kcal —',valid(protein)?'P '+protein+' g':'P —',valid(carbs)?'HC '+carbs+' g':'HC —',valid(fat)?'G '+fat+' g':'G —'].join(' · ');
-  return '<div class="catalog-item"><strong>'+esc(name)+'</strong><small>'+esc(p.brands||p.dataSource||p.quantity||'Alimento')+'</small><div class="hint">'+details+' por 100 g</div><button class="btn secondary small" style="margin-top:9px" onclick="selectNutritionFood('+i+')">Seleccionar</button></div>';
+  return '<div class="catalog-item"><strong>'+esc(name)+'</strong><small>'+esc(p.brands||p.dataSource||p.quantity||'Alimento')+'</small><div class="hint">'+details+' por 100 g</div><div class="quick-actions" style="margin-top:9px"><button class="btn small" onclick="quickAddNutritionFood('+i+')">＋ Añadir</button><button class="btn ghost small" onclick="selectNutritionFood('+i+')">Cantidad</button></div></div>';
  }).join('');
  status.textContent='Resultados encontrados: '+nutritionFoodSearchResults.length+'. Selecciona el alimento correcto. Los valores del catálogo básico son orientativos.';
 }
@@ -393,6 +395,7 @@ async function searchNutritionFoods(){
  renderNutritionFoodSearchResults();
 }
 function selectNutritionFood(index){
+ const advanced=document.getElementById('nutritionAdvanced');if(advanced)advanced.open=true;
  const p=nutritionFoodSearchResults[index];if(!p)return;
  const n=p.nutriments||{};
  let kcal=Number(n['energy-kcal_100g']);
@@ -402,7 +405,7 @@ function selectNutritionFood(index){
  document.getElementById('foodName').value=name;
  document.getElementById('foodUnit').value='g';updateFoodUnitUI();
  document.getElementById('foodBasis').value='100g';
- document.getElementById('foodGrams').value=100;
+ document.getElementById('foodGrams').value=nutritionRememberedAmount(name,'g');
  document.getElementById('foodKcal').value=Number.isFinite(kcal)?Math.max(0,kcal).toFixed(1):'';
  document.getElementById('foodProtein').value=Number.isFinite(protein)?Math.max(0,protein).toFixed(1):'';
  document.getElementById('foodCarbs').value=Number.isFinite(carbs)?Math.max(0,carbs).toFixed(1):'';
@@ -413,4 +416,66 @@ function selectNutritionFood(index){
  document.getElementById('nutritionFoodSearchStatus').textContent='Seleccionado: '+name+'. Ahora indica la cantidad que has comido y pulsa «Añadir al diario».';
  document.getElementById('foodGrams').focus();
  document.getElementById('foodGrams').select();
+}
+
+ 
+// Registro rápido: cantidades recordadas, recientes, favoritos y repetición del día anterior.
+function nutritionRememberedAmount(name,unit='g'){
+ const saved=nutritionData.quantityMemory?.[normalizeNutritionSearch(name)];
+ return saved&&saved.unit===unit?Number(saved.amount)||100:100;
+}
+function nutritionQuickMealValue(){return document.getElementById('nutritionQuickMeal')?.value||'Comida'}
+function quickAddNutritionFood(index){
+ const p=nutritionFoodSearchResults[index];if(!p)return;
+ const n=p.nutriments||{};let kcal=Number(n['energy-kcal_100g']);
+ if(!Number.isFinite(kcal)||kcal<=0){const kj=Number(n['energy_100g']);kcal=Number.isFinite(kj)&&kj>0?kj/4.184:0}
+ const protein=Number(n.proteins_100g),carbs=Number(n.carbohydrates_100g),fat=Number(n.fat_100g);
+ if(![kcal,protein,carbs,fat].every(v=>Number.isFinite(v)&&v>=0)){selectNutritionFood(index);return}
+ const name=p.product_name_es||p.product_name||p.generic_name||p.name||'Alimento';
+ const amount=nutritionRememberedAmount(name,'g');
+ document.getElementById('foodMeal').value=nutritionQuickMealValue();
+ addNutritionEntry({name,amount,unit:'g',basis:'100g',kcal,protein,carbs,fat,barcode:p.code||null});
+}
+function addRecentNutritionEntry(id){
+ const entry=nutritionData.entries.find(e=>e.id===id);if(!entry)return;
+ nutritionData.entries.push({...entry,id:nutritionId(),date:nutritionToday(),meal:nutritionQuickMealValue()});
+ saveNutritionData();renderNutrition();toast('Añadido de nuevo');
+}
+function addQuickFavorite(id){
+ const f=nutritionData.favorites.find(x=>x.id===id);if(!f)return;
+ document.getElementById('foodMeal').value=nutritionQuickMealValue();
+ addNutritionFavorite(id);
+}
+function renderNutritionQuick(){
+ const fav=document.getElementById('nutritionQuickFavorites'),recent=document.getElementById('nutritionRecent');
+ if(!fav||!recent)return;
+ const favorites=nutritionData.favorites||[];
+ fav.innerHTML=favorites.length?favorites.slice(0,8).map(f=>'<div class="quick-food"><div><strong>'+esc(f.name)+'</strong><div class="hint">'+Math.round(f.kcal)+' kcal · '+nutritionEntryQuantity(f)+'</div></div><button class="btn small" onclick="addQuickFavorite(\''+f.id+'\')">＋</button></div>').join(''):'<div class="empty">Tus favoritos aparecerán aquí. Pulsa ☆ en cualquier alimento del diario.</div>';
+ const seen=new Set(),items=[];
+ [...nutritionData.entries].reverse().forEach(e=>{const key=normalizeNutritionSearch(e.name);if(!seen.has(key)){seen.add(key);items.push(e)}});
+ const latest=items.slice(0,8);
+ recent.innerHTML=latest.length?'<div style="grid-column:1/-1"><h3>Recientes</h3></div>'+latest.map(e=>'<div class="quick-food"><div><strong>'+esc(e.name)+'</strong><div class="hint">'+nutritionEntryQuantity(e)+' · '+Math.round(e.kcal)+' kcal</div></div><button class="btn secondary small" onclick="addRecentNutritionEntry(\''+e.id+'\')">＋ Añadir</button></div>').join(''):'';
+}
+function repeatYesterdayNutrition(){
+ const today=nutritionToday(),d=new Date(today+'T12:00:00');d.setDate(d.getDate()-1);
+ const yesterday=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ const source=nutritionData.entries.filter(e=>e.date===yesterday);
+ if(!source.length){toast('Ayer no hay comidas registradas');return}
+ if(nutritionData.entries.some(e=>e.date===today&&e.copiedFromDate===yesterday)){toast('Ya has repetido las comidas de ayer');return}
+ if(!confirm('¿Copiar '+source.length+' alimentos de ayer a hoy?'))return;
+ source.forEach(e=>nutritionData.entries.push({...e,id:nutritionId(),date:today,copiedFromDate:yesterday}));
+ saveNutritionData();renderNutrition();toast('Comidas de ayer copiadas');
+}
+function openNutritionScanner(){
+ const advanced=document.getElementById('nutritionAdvanced');if(advanced)advanced.open=true;
+ document.getElementById('foodBarcode')?.scrollIntoView({behavior:'smooth',block:'center'});
+ startBarcodeCamera();
+}
+function addBarcodeFoodNow(){
+ const name=document.getElementById('foodName')?.value.trim();if(!name)return;
+ const values=['foodKcal','foodProtein','foodCarbs','foodFat'].map(id=>Number(document.getElementById(id)?.value));
+ if(values.some(v=>!Number.isFinite(v)||v<0)||!document.getElementById('foodKcal')?.value){toast('Este producto no tiene datos nutricionales suficientes');return}
+ const barcode=document.getElementById('foodBarcode')?.dataset.lastBarcode||'';
+ document.getElementById('foodMeal').value=nutritionQuickMealValue();
+ addNutritionEntry({name,amount:nutritionRememberedAmount(name,'g'),unit:'g',basis:'100g',kcal:values[0],protein:values[1],carbs:values[2],fat:values[3],barcode});
 }
