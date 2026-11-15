@@ -489,7 +489,7 @@ function getBodyWeightEntries(){
 function renderBodyWeight(){
  const dateInput=document.getElementById('bodyWeightDate'),valueInput=document.getElementById('bodyWeightValue');
  if(!dateInput||!valueInput)return;
- if(!dateInput.value)dateInput.value=new Date().toLocaleDateString('en-CA');
+ if(!dateInput.value){const now=new Date();dateInput.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
  const entries=getBodyWeightEntries().sort((a,b)=>a.date.localeCompare(b.date));
  const summary=document.getElementById('bodyWeightSummary'),chart=document.getElementById('bodyWeightChart'),history=document.getElementById('bodyWeightHistory');
  if(!entries.length){summary.innerHTML='<div class="empty">Todavía no has registrado tu peso. Añade la primera medición para empezar a ver tu evolución.</div>';chart.innerHTML='';history.innerHTML='';return}
