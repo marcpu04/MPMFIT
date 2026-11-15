@@ -1,0 +1,40 @@
+# Checks inline app code and the standalone Nutrition module.
+name: Validate MPMFIT
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [fix/sync-and-account-isolation]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Extract inline JavaScript
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          html = Path("MPMFIT 3.0.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
+          inline_scripts = [script for script in scripts if script.strip()]
+          if not inline_scripts:
+              raise SystemExit("No inline JavaScript found in MPMFIT 3.0.html")
+          Path("/tmp/mpmfit-inline.js").write_text("\n;\n".join(inline_scripts), encoding="utf-8")
+          print(f"Extracted {len(inline_scripts)} inline script block(s)")
+          PY
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check /tmp/mpmfit-inline.js
+          node --check nutrition.js
