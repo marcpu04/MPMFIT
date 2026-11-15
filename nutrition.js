@@ -58,7 +58,7 @@ function saveNutritionGoals(){
 }
 function nutritionEntryQuantity(entry){
  const labels={g:'g',ml:'ml',unit:Math.abs(entry.amount)===1?'unidad':'unidades',portion:Math.abs(entry.amount)===1?'ración':'raciones'};
- const amount=Number(entry.amount)||0;
+ const amount=Number(entry.amount??entry.grams)||0;
  return (Number.isInteger(amount)?amount:amount.toLocaleString('es-ES',{maximumFractionDigits:2}))+' '+(labels[entry.unit]||entry.unit||'g');
 }
 function nutritionFoodValues(){return ['foodKcal','foodProtein','foodCarbs','foodFat'].map(id=>Number(document.getElementById(id)?.value))}
