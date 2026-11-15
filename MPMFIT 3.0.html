@@ -445,13 +445,32 @@ input::placeholder,textarea::placeholder{color:#657368}
 .mobile-nav button .mobile-icon svg{width:21px;height:21px;stroke-width:1.9}
 .mobile-more button{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:750}
 .mobile-more button svg{width:17px;height:17px;color:var(--green);opacity:.9}
+
+/* Ajustes y espaciado consistente */
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.settings-card{display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:22px;min-width:0}
+.settings-card-icon{width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(155,230,107,.2);border-radius:13px;background:rgba(155,230,107,.08);color:var(--green)}
+.settings-card-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.settings-card-copy{flex:1;min-width:0}
+.settings-card-copy h2{font-size:19px;letter-spacing:-.5px;margin:5px 0 7px}
+.settings-card-copy p{font-size:13px;line-height:1.6;margin:0;max-width:390px}
+.settings-action{width:100%;min-height:46px;margin-top:4px}
+.settings-footnote{margin:16px 2px 0;color:var(--muted);font-size:12px;line-height:1.6}
+@media(max-width:760px){
+ .app{padding-left:16px;padding-right:16px}
+ .settings-grid{grid-template-columns:1fr;gap:12px}
+ .settings-card{padding:18px;gap:12px}
+ .settings-action{margin-top:2px}
+}
+@media(max-width:380px){.app{padding-left:13px;padding-right:13px}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
  <div class="brand"><div class="logo">M</div><div><strong>MPMFIT</strong><small>TRAINING · NUTRITION · PROGRESS</small></div></div>
- <div class="topright"><span class="pill" id="syncStatus">● SIN CONECTAR</span><button class="btn secondary small" id="accountButton" onclick="openAccount()">Iniciar sesión</button><button class="btn secondary small" onclick="openBackup()">Copia de seguridad</button></div>
+ <div class="topright"><span class="pill" id="syncStatus">● SIN CONECTAR</span></div>
 </header>
 <nav class="nav" aria-label="Navegación principal">
  <button class="active" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z M9 21v-7h6v7"/></svg><span>Inicio</span></button>
@@ -463,6 +482,7 @@ input::placeholder,textarea::placeholder{color:#657368}
  <button data-view="progress"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17l6-6 4 4 8-9 M15 6h6v6"/></svg><span>Progreso</span></button>
  <button data-view="records"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span>Récords</span></button>
  <button data-view="nutrition"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-8-4.4-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.6-8 11-8 11z M12 7v8 M8.5 11h7"/></svg><span>Nutrición</span></button>
+ <button data-view="settings"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.78.42l-.06.06h-3.4l-.03-.08a1.7 1.7 0 0 0-1.45-1.12l-.08-.01-1.7-2.94.05-.06A1.7 1.7 0 0 0 9.9 14.3l-.02-.08v-3.4l.08-.03a1.7 1.7 0 0 0 1.12-1.45l.01-.08 2.94-1.7.06.05a1.7 1.7 0 0 0 1.88.34l.06-.06 2.94 1.7-.02.08a1.7 1.7 0 0 0 .42 1.78l.06.06v3.4z"/></svg><span>Ajustes</span></button>
 </nav>
 <nav class="mobile-nav" aria-label="Navegación principal móvil">
  <button data-view="home" class="active"><span class="mobile-icon"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z M9 21v-7h6v7"/></svg></span><span>Inicio</span></button>
@@ -477,7 +497,7 @@ input::placeholder,textarea::placeholder{color:#657368}
  <button data-view="history"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8 M3 3v5h5 M12 7v5l3 2"/></svg><span>Historial</span></button>
  <button data-view="calendar"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v4M17 3v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1z"/></svg><span>Calendario</span></button>
  <button data-view="records"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span>Récords</span></button>
- <button type="button" onclick="openBackup()"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg><span>Copia de seguridad</span></button>
+ <button data-view="settings"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.78.42l-.06.06h-3.4l-.03-.08a1.7 1.7 0 0 0-1.45-1.12l-.08-.01-1.7-2.94.05-.06A1.7 1.7 0 0 0 9.9 14.3l-.02-.08v-3.4l.08-.03a1.7 1.7 0 0 0 1.12-1.45l.01-.08 2.94-1.7.06.05a1.7 1.7 0 0 0 1.88.34l.06-.06 2.94 1.7-.02.08a1.7 1.7 0 0 0 .42 1.78l.06.06v3.4z"/></svg><span>Ajustes</span></button>
 </div>
 
 <section id="home" class="view active">
@@ -659,6 +679,22 @@ input::placeholder,textarea::placeholder{color:#657368}
  <div class="heading"><div><div class="eyebrow">TUS MEJORES MARCAS</div><h1>Récords personales</h1><div class="muted">Tu mejor peso registrado en cada ejercicio.</div></div></div>
  <div class="card" id="recordsList"></div>
 </section>
+<section id="settings" class="view">
+ <div class="heading"><div><div class="eyebrow">PERSONALIZA MPMFIT</div><h1>Ajustes</h1><div class="muted">Tu cuenta, tus datos y las preferencias de la aplicación.</div></div></div>
+ <div class="settings-grid">
+  <article class="card settings-card">
+   <div class="settings-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0 M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/></svg></div>
+   <div class="settings-card-copy"><div class="eyebrow">CUENTA</div><h2>Acceso y sincronización</h2><p class="muted">Inicia sesión para mantener tus datos sincronizados o cierra la sesión de este dispositivo.</p></div>
+   <button class="btn secondary settings-action" id="accountButton" onclick="openAccount()">Iniciar sesión</button>
+  </article>
+  <article class="card settings-card">
+   <div class="settings-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 20h16"/></svg></div>
+   <div class="settings-card-copy"><div class="eyebrow">DATOS Y SEGURIDAD</div><h2>Copia de seguridad</h2><p class="muted">Exporta tus datos a un archivo o restaura una copia guardada anteriormente.</p></div>
+   <button class="btn settings-action" onclick="openBackup()">Gestionar copia</button>
+  </article>
+ </div>
+ <p class="settings-footnote">Consejo: guarda una copia periódica de tus datos, incluso si utilizas la sincronización en la nube.</p>
+</section>
 <div class="footer">MPMFIT · TRAINING / NUTRITION / PROGRESS</div>
 </div>
 <div id="authGate" style="position:fixed;inset:0;background:#080b09f2;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px">
@@ -708,6 +744,7 @@ function addPendingDelete(table,id){if(!id)return;const pending=loadPendingDelet
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
 function setAuthMessage(message){const el=document.getElementById('authMessage');if(el)el.textContent=message}
 function openAccount(){if(currentUser){if(confirm('¿Quieres cerrar sesión en este dispositivo?'))supabaseClient.auth.signOut()}else{document.getElementById('authGate').style.display='flex'}}
+function renderSettings(){const button=document.getElementById('accountButton');if(button){button.textContent=currentUser?'Cerrar sesión':'Iniciar sesión';button.classList.toggle('danger',!!currentUser);button.classList.toggle('secondary',!currentUser)}}
 async function signUp(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||password.length<6)return setAuthMessage('Introduce un correo válido y una contraseña de al menos 6 caracteres.');setAuthMessage('Creando cuenta…');const {error}=await supabaseClient.auth.signUp({email,password});if(error){setAuthMessage(error.message);return}setAuthMessage('Cuenta creada. Si Supabase te pide confirmar el correo, revisa tu bandeja de entrada y después inicia sesión.')}
 async function signIn(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||!password)return setAuthMessage('Introduce tu correo y contraseña.');setAuthMessage('Iniciando sesión…');const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){setAuthMessage(error.message);return}await activateUser(data.user)}
 async function activateUser(user){
@@ -888,7 +925,7 @@ function showView(id){
  document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
  const more=document.getElementById('mobileMoreMenu');if(more)more.classList.remove('open');
  const moreButton=document.getElementById('mobileMoreButton');if(moreButton)moreButton.setAttribute('aria-expanded','false');
- if(id==='train')setupTraining();if(id==='nutrition'&&typeof renderNutrition==='function')renderNutrition();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();window.scrollTo(0,0)
+ if(id==='train')setupTraining();if(id==='nutrition'&&typeof renderNutrition==='function')renderNutrition();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();if(id==='settings')renderSettings();window.scrollTo(0,0)
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
 document.getElementById('mobileMoreButton')?.addEventListener('click',()=>{
