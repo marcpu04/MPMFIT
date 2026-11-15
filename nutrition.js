@@ -8,8 +8,8 @@ function nutritionStorageKey(){return 'mpmfit_nutrition_v1_'+(currentUser?.id||'
 function loadNutritionData(){
  try{
   const saved=JSON.parse(localStorage.getItem(nutritionStorageKey()));
-  nutritionData=saved&&Array.isArray(saved.entries)?{goal:saved.goal||'maintenance',targets:saved.targets||{kcal:0,protein:0,carbs:0,fat:0},entries:saved.entries,favorites:Array.isArray(saved.favorites)?saved.favorites:[],savedMeals:Array.isArray(saved.savedMeals)?saved.savedMeals:[],recipes:Array.isArray(saved.recipes)?saved.recipes:[]}:{goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[]};
- }catch(e){nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[]}}
+  nutritionData=saved&&Array.isArray(saved.entries)?{goal:saved.goal||'maintenance',targets:saved.targets||{kcal:0,protein:0,carbs:0,fat:0},entries:saved.entries,favorites:Array.isArray(saved.favorites)?saved.favorites:[],savedMeals:Array.isArray(saved.savedMeals)?saved.savedMeals:[],recipes:Array.isArray(saved.recipes)?saved.recipes:[],mealPlans:Array.isArray(saved.mealPlans)?saved.mealPlans:[]}:{goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[]};
+ }catch(e){nutritionData={goal:'maintenance',targets:{kcal:0,protein:0,carbs:0,fat:0},entries:[],favorites:[],savedMeals:[],recipes:[],mealPlans:[]}}
 }
 function saveNutritionData(){localStorage.setItem(nutritionStorageKey(),JSON.stringify(nutritionData))}
 function nutritionToday(){return document.getElementById('nutritionDate')?.value||new Date().toISOString().slice(0,10)}
@@ -37,6 +37,7 @@ function renderNutrition(){
   return items.length?'<div class="history-item"><div class="row"><strong>'+meal+'</strong><button class="btn ghost small" onclick="saveNutritionMeal(\''+meal+'\')">Guardar comida</button></div>'+items.map(e=>'<div class="row" style="padding:8px 0;gap:8px"><div><strong>'+esc(e.name)+'</strong><div class="hint">'+nutritionEntryQuantity(e)+' · '+Math.round(e.kcal)+' kcal · P '+e.protein.toFixed(1)+' g · HC '+e.carbs.toFixed(1)+' g · G '+e.fat.toFixed(1)+' g</div></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn ghost small" title="Añadir a favoritos" onclick="toggleNutritionFavorite(\''+e.id+'\')">'+(nutritionData.favorites.some(x=>x.sourceId===e.id||x.name===e.name)?'★':'☆')+'</button><button class="btn secondary small" onclick="editNutritionEntry(\''+e.id+'\')">Editar</button><button class="btn danger small" onclick="deleteNutritionEntry(\''+e.id+'\')">×</button></div></div>').join('')+'</div>':'';
  }).join(''):'<div class="empty">Todavía no has añadido alimentos para este día.</div>';
  renderNutritionLibrary();
+ renderNutritionPlanner();
  renderNutritionHistory();
 }
 function toggleNutritionGoals(show){
@@ -259,6 +260,41 @@ function renderNutritionLibrary(){
  const mealsHtml=savedMeals.length?savedMeals.map(m=>'<div class="catalog-item"><strong>'+esc(m.name)+'</strong><div class="hint">'+m.items.length+' alimentos · '+Math.round(m.items.reduce((a,x)=>a+x.kcal,0))+' kcal</div><div class="row" style="margin-top:8px"><button class="btn secondary small" onclick="addSavedNutritionMeal(\''+m.id+'\')">Usar comida</button><button class="btn danger small" onclick="deleteSavedNutritionMeal(\''+m.id+'\')">Eliminar</button></div></div>').join(''):'<div class="empty">Guarda un desayuno, comida o cena desde el diario.</div>';
  const recipesHtml=recipes.length?recipes.map(r=>'<div class="catalog-item"><strong>'+esc(r.name)+'</strong><div class="hint">'+r.servings+' raciones · Total '+Math.round(r.totals.kcal)+' kcal</div><div class="hint">Por ración: '+Math.round(r.perServing.kcal)+' kcal · P '+r.perServing.protein.toFixed(1)+' g · HC '+r.perServing.carbs.toFixed(1)+' g · G '+r.perServing.fat.toFixed(1)+' g</div><div class="row" style="margin-top:8px"><button class="btn secondary small" onclick="addNutritionRecipe(\''+r.id+'\')">Añadir 1 ración</button><button class="btn danger small" onclick="deleteNutritionRecipe(\''+r.id+'\')">Eliminar</button></div></div>').join(''):'<div class="empty">Crea una receta a partir de ingredientes registrados hoy.</div>';
  root.innerHTML='<div class="formgrid"><div class="field"><label>Añadir elementos a</label><select id="nutritionQuickMeal" onchange="renderNutritionLibrary()"><option '+(quickMeal==='Desayuno'?'selected':'')+'>Desayuno</option><option '+(quickMeal==='Media mañana'?'selected':'')+'>Media mañana</option><option '+(quickMeal==='Comida'?'selected':'')+'>Comida</option><option '+(quickMeal==='Merienda'?'selected':'')+'>Merienda</option><option '+(quickMeal==='Cena'?'selected':'')+'>Cena</option><option '+(quickMeal==='Otros'?'selected':'')+'>Otros</option></select></div></div><div class="row" style="margin:14px 0 8px"><h3>★ Favoritos</h3></div><div class="catalog-grid">'+favHtml+'</div><div class="row" style="margin:20px 0 8px"><h3>Comidas guardadas</h3></div><div class="catalog-grid">'+mealsHtml+'</div><div class="row" style="margin:20px 0 8px"><h3>Recetas</h3><button class="btn small" onclick="createNutritionRecipe()">＋ Crear receta</button></div><div class="catalog-grid">'+recipesHtml+'</div>';
+}
+function addNutritionPlan(){
+ const date=document.getElementById('nutritionPlanDate')?.value,meal=document.getElementById('nutritionPlanMeal')?.value,choice=document.getElementById('nutritionPlanChoice')?.value;
+ if(!date||!choice){toast('Elige una fecha y una comida guardada o receta');return}
+ const [type,id]=choice.split(':');
+ const item=type==='meal'?nutritionData.savedMeals.find(x=>x.id===id):nutritionData.recipes.find(x=>x.id===id);
+ if(!item)return;
+ nutritionData.mealPlans.push({id:nutritionId(),date,meal,type,itemId:id,name:item.name});
+ saveNutritionData();renderNutritionPlanner();toast('Comida planificada');
+}
+function removeNutritionPlan(id){nutritionData.mealPlans=nutritionData.mealPlans.filter(p=>p.id!==id);saveNutritionData();renderNutritionPlanner()}
+function useNutritionPlan(id){
+ const plan=nutritionData.mealPlans.find(p=>p.id===id);if(!plan)return;
+ const meal=plan.meal||'Comida';
+ if(plan.type==='meal'){
+  const saved=nutritionData.savedMeals.find(x=>x.id===plan.itemId);if(!saved)return;
+  saved.items.forEach(item=>nutritionData.entries.push({...item,id:nutritionId(),date:plan.date,meal}));
+ }else{
+  const recipe=nutritionData.recipes.find(x=>x.id===plan.itemId);if(!recipe)return;
+  const p=recipe.perServing||recipe.totals;
+  nutritionData.entries.push({id:nutritionId(),date:plan.date,meal,name:recipe.name+' (1 ración)',amount:1,unit:'portion',basis:'portion',kcal:p.kcal,protein:p.protein,carbs:p.carbs,fat:p.fat,recipeId:recipe.id});
+ }
+ saveNutritionData();
+ const dateField=document.getElementById('nutritionDate');if(dateField)dateField.value=plan.date;
+ renderNutrition();toast('Comida añadida al diario de '+plan.date);
+}
+function renderNutritionPlanner(){
+ const root=document.getElementById('nutritionPlanner');if(!root)return;
+ const date=document.getElementById('nutritionPlanDate');
+ if(date&&!date.value)date.value=nutritionToday();
+ const choices=[...(nutritionData.savedMeals||[]).map(x=>({value:'meal:'+x.id,label:'Comida · '+x.name})),...(nutritionData.recipes||[]).map(x=>({value:'recipe:'+x.id,label:'Receta · '+x.name}))];
+ const options=choices.map(x=>'<option value="'+x.value+'">'+esc(x.label)+'</option>').join('');
+ const plans=(nutritionData.mealPlans||[]).slice().sort((a,b)=>(a.date+a.meal).localeCompare(b.date+b.meal));
+ const list=plans.length?plans.map(p=>'<div class="catalog-item"><div class="row"><strong>'+esc(p.name)+'</strong><span class="tag">'+new Date(p.date+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+' · '+esc(p.meal)+'</span></div><div class="row" style="margin-top:8px"><button class="btn secondary small" onclick="useNutritionPlan(\''+p.id+'\')">Registrar en el diario</button><button class="btn danger small" onclick="removeNutritionPlan(\''+p.id+'\')">Quitar</button></div></div>').join(''):'<div class="empty">Todavía no tienes comidas planificadas.</div>';
+ root.innerHTML=choices.length?'<div class="formgrid"><div class="field"><label>Fecha</label><input type="date" id="nutritionPlanDate" value="'+(date?.value||nutritionToday())+'"></div><div class="field"><label>Comida</label><select id="nutritionPlanMeal"><option>Desayuno</option><option>Media mañana</option><option>Comida</option><option>Merienda</option><option>Cena</option></select></div><div class="field fullfield"><label>Comida guardada o receta</label><select id="nutritionPlanChoice">'+options+'</select></div></div><button class="btn" style="margin-top:10px" onclick="addNutritionPlan()">＋ Añadir al plan</button><div class="catalog-grid" style="margin-top:14px">'+list+'</div>':'<div class="empty">Guarda primero una comida o crea una receta para empezar a planificar tu semana.</div>';
 }
 function renderNutritionHistory(){
  const root=document.getElementById('nutritionHistory');if(!root)return;
