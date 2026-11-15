@@ -234,6 +234,7 @@ async function activateUser(user){
   setupTraining();
   restoreTrainingDraft();
   await queueCloudSave();
+  if(typeof initNutrition==='function')initNutrition();
   renderAll();
  }catch(error){cloudReady=false;setSyncStatus('● ERROR DE CONEXIÓN');alert('No se han podido cargar los datos de Supabase: '+(error.message||error));}
 }
