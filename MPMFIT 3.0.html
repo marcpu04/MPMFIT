@@ -10,7 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="MPMFIT">
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-<title>MPMFIT — Fitness App</title>
+<meta name="description" content="MPMFIT: organiza tus entrenamientos, nutrición y progreso físico en una sola aplicación.">
+<title>MPMFIT — Training, Nutrition & Progress</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0b0e0c;--panel:#141a16;--panel2:#1a211c;--line:#29332c;--green:#9be66b;--green2:#b8ff83;--muted:#94a096;--text:#f0f5f0;--red:#ff7777}
@@ -35,7 +36,8 @@ input,select,textarea{font-size:16px}
   .top{position:sticky;top:0;z-index:20;margin:0 -12px 16px;padding:9px 12px;background:rgba(11,14,12,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(65,82,68,.45)}
   .brand{gap:9px}.logo{width:38px;height:38px;border-radius:12px}.brand strong{font-size:18px}.brand small{font-size:9px;letter-spacing:1.5px}
   .topright{gap:6px}.topright .btn{min-height:38px;padding:7px 9px;font-size:11px}
-  .topright #accountButton{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n  .topright button[onclick="openBackup()"]{display:none}
+  .topright #accountButton{max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topright button[onclick="openBackup()"]{display:none}
   .nav{display:none}
   .mobile-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:7px 7px calc(7px + env(safe-area-inset-bottom));background:rgba(17,23,19,.97);border-top:1px solid #334136;backdrop-filter:blur(18px)}
   .mobile-nav button{min-width:0;min-height:55px;border:0;border-radius:12px;background:transparent;color:#9aa69c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px 2px;font-size:10px;font-weight:700;white-space:nowrap}
@@ -201,6 +203,237 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  .home-nutrition-content{min-height:0}
 }
 @media(max-width:370px){.home-hero h1{font-size:31px}.home-hero-actions{grid-template-columns:1fr}.home-stat>b{font-size:24px}.home-panel{padding:14px}.home-week-days{gap:3px}}
+
+
+/* ─────────────────────────────────────────────────────────────
+   MPMFIT DESIGN SYSTEM · PROFESSIONAL PASS 01
+   Visual layer only: preserves existing application behaviour.
+   ───────────────────────────────────────────────────────────── */
+:root{
+ --bg:#090d0a;--panel:#111813;--panel2:#17211a;--surface:#121a15;
+ --surface-raised:#1a251d;--line:rgba(169,196,171,.13);
+ --line-strong:rgba(169,196,171,.22);--green:#a6ed72;--green2:#c1ff8d;
+ --muted:#91a095;--muted-2:#718076;--text:#f2f7f1;--red:#ff7777;
+ --radius-sm:11px;--radius-md:16px;--radius-lg:22px;
+ --shadow-card:0 12px 34px rgba(0,0,0,.19);
+ --shadow-float:0 22px 65px rgba(0,0,0,.36);
+ --focus:0 0 0 3px rgba(166,237,114,.18);
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{
+ background:
+  radial-gradient(ellipse at 50% -24%,rgba(104,168,82,.17),transparent 48%),
+  radial-gradient(ellipse at 100% 60%,rgba(46,91,55,.075),transparent 38%),
+  var(--bg);
+ color:var(--text);font-feature-settings:"ss01" on,"cv11" on;
+ -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+.app{max-width:1320px;padding:26px 34px 42px}
+.top{position:relative;gap:20px;margin-bottom:22px;padding:2px 0 20px;border-bottom:1px solid var(--line)}
+.brand{gap:13px}
+.logo{width:46px;height:46px;border-radius:15px;font-size:20px}
+.brand strong{font-size:22px;letter-spacing:2px;font-weight:900}
+.brand small{margin-top:2px;font-size:9px;letter-spacing:2.25px;color:#839187}
+.topright{gap:9px}
+#syncStatus{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;background:rgba(255,255,255,.025);border-color:var(--line);font-size:10px;font-weight:800;letter-spacing:.55px}
+#accountButton{min-height:39px}
+.nav{gap:5px;padding:5px 0 15px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+.nav button{position:relative;padding:11px 14px;border-radius:11px;color:#9aa79c;font-size:12px;font-weight:750;transition:all .2s ease}
+.nav button:hover{background:rgba(255,255,255,.045);color:#e9f1e8}
+.nav button.active{background:rgba(166,237,114,.105);border-color:rgba(166,237,114,.2);color:var(--green)}
+.nav button.active:after{content:"";position:absolute;left:18px;right:18px;bottom:-16px;height:2px;border-radius:3px;background:var(--green);box-shadow:0 0 12px rgba(166,237,114,.4)}
+.view{animation:mpm-view-in .24s ease both}
+@keyframes mpm-view-in{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.heading{align-items:center;margin:0 0 22px;padding:0 0 17px;border-bottom:1px solid rgba(169,196,171,.09)}
+.heading h1{font-size:clamp(29px,3vw,39px);font-weight:850;letter-spacing:-1.5px;line-height:1.08}
+.heading .muted{margin-top:7px;font-size:13px;color:#91a095}
+.eyebrow{font-size:10px;letter-spacing:2.1px;font-weight:850;color:var(--green)}
+.pill{background:rgba(255,255,255,.025);border-color:var(--line);color:#aab7ac}
+.card{
+ position:relative;min-width:0;padding:21px;
+ border:1px solid var(--line);border-radius:var(--radius-md);
+ background:linear-gradient(150deg,rgba(24,34,27,.96),rgba(15,22,17,.98));
+ box-shadow:var(--shadow-card);
+}
+.card h2{margin:0 0 7px;font-size:21px;letter-spacing:-.7px;font-weight:820}
+.card h3{margin:0 0 12px;font-size:16px;letter-spacing:-.35px;font-weight:780}
+.card .hint,.hint{color:#91a095;line-height:1.55}
+.card.full{grid-column:1/-1}
+.grid{gap:14px}
+.btn{
+ min-height:42px;padding:10px 16px;border-radius:11px;
+ background:linear-gradient(135deg,#b4f783,#91d85c);
+ color:#10190d;font-size:12px;font-weight:850;letter-spacing:.05px;
+ box-shadow:0 6px 18px rgba(146,213,91,.13);
+}
+.btn:hover{background:linear-gradient(135deg,#c8ff9b,#a6ed72);box-shadow:0 8px 23px rgba(146,213,91,.2);transform:translateY(-1px)}
+.btn.secondary{background:linear-gradient(145deg,#243128,#1b261e);color:#e7f0e7;border:1px solid rgba(164,193,166,.2);box-shadow:none}
+.btn.secondary:hover{background:#2b3b2e;border-color:rgba(166,237,114,.32);color:var(--green)}
+.btn.ghost{background:rgba(255,255,255,.025);color:#aeb9b0;border:1px solid var(--line);box-shadow:none}
+.btn.ghost:hover{background:rgba(255,255,255,.06);color:var(--text);border-color:var(--line-strong)}
+.btn.danger{background:rgba(255,103,103,.1);color:#ffaaaa;border:1px solid rgba(255,103,103,.22);box-shadow:none}
+.btn.small{min-height:34px;padding:7px 11px;border-radius:9px;font-size:11px}
+button:disabled{opacity:.48;cursor:not-allowed;transform:none!important}
+input,select,textarea{
+ min-height:43px;padding:11px 13px;border:1px solid rgba(169,196,171,.2);
+ border-radius:11px;background:#0d140f;color:var(--text);
+ box-shadow:inset 0 1px 2px rgba(0,0,0,.14);transition:border-color .18s,box-shadow .18s,background .18s;
+}
+input:hover,select:hover,textarea:hover{border-color:rgba(169,196,171,.34)}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:var(--focus);background:#101911;outline:0}
+input::placeholder,textarea::placeholder{color:#657368}
+.field{gap:7px;min-width:0}
+.field label{font-size:11px;font-weight:750;letter-spacing:.15px;color:#a8b5aa}
+.formgrid{gap:13px}
+.row{gap:12px}
+.stack{gap:12px}
+.empty{padding:30px 20px;border:1px dashed rgba(169,196,171,.22);border-radius:14px;background:rgba(255,255,255,.015);color:#98a69b}
+.tag{background:rgba(166,237,114,.1);border:1px solid rgba(166,237,114,.15);color:var(--green);font-weight:800}
+.exercise,.catalog-item,.quick-food{
+ background:linear-gradient(145deg,rgba(22,31,24,.96),rgba(15,21,17,.96));
+ border:1px solid var(--line);border-radius:13px;transition:border-color .18s,background .18s,transform .18s;
+}
+.exercise:hover,.catalog-item:hover,.quick-food:hover{border-color:rgba(166,237,114,.28);background:#19251b}
+.exercise{padding:14px}
+.exercise strong,.catalog-item strong,.quick-food strong{font-size:13px;font-weight:780;color:#eaf1e9}
+.exercise small,.catalog-item small{display:block;margin-top:3px;color:#8d9b90}
+.routine-card{padding:21px}
+.routine-card h3{font-size:20px}
+.exercise-block{padding:16px;background:rgba(8,13,9,.35);border:1px solid var(--line);border-radius:15px}
+.sethead{padding:0 2px 5px;color:#829086;font-size:10px;font-weight:800;letter-spacing:.5px}
+.setrow{gap:8px;margin:9px 0}
+.setrow input{min-height:40px;border-radius:9px;background:#0c130e}
+.check{accent-color:var(--green)}
+.timerbox{padding:15px 17px;border:1px solid rgba(166,237,114,.18);border-radius:15px;background:linear-gradient(110deg,rgba(166,237,114,.07),rgba(12,19,14,.7))}
+.timerclock{font-size:30px;letter-spacing:-1px}
+.filterrow{gap:10px;margin-bottom:16px}
+.catalog-grid{gap:12px}
+.history-item{padding:15px 2px;border-bottom:1px solid var(--line)}
+.barwrap{height:7px;background:#273329;border-radius:20px}
+.bar{background:linear-gradient(90deg,#77bd4c,var(--green2))}
+.calendar-head{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.cal-day{background:rgba(7,12,8,.48);border-color:var(--line);border-radius:11px;padding:9px}
+.cal-day.today{box-shadow:inset 0 0 0 1px rgba(166,237,114,.3)}
+.cal-day.haswork{background:rgba(166,237,114,.1);border-color:rgba(166,237,114,.32)}
+.chartbars{border-color:var(--line)}
+.chartbar{background:linear-gradient(180deg,var(--green2),#5b9d40)}
+.pr-item{padding:15px 5px;border-color:var(--line)}
+.pr-value{font-size:20px}
+.weight-history-row{padding:13px 2px;border-color:var(--line)}
+.measure-stat{background:rgba(7,12,8,.4);border-color:var(--line);border-radius:13px}
+.progress-photo-card{padding:9px;background:#111913;border-color:var(--line);border-radius:14px}
+.progress-photo-card img{border-radius:10px}
+#nutritionAdvanced{display:block}
+#nutritionAdvanced>summary{padding:14px 15px;border:1px solid rgba(166,237,114,.2);border-radius:12px;background:rgba(166,237,114,.055);color:var(--green)!important;font-size:12px;letter-spacing:.1px}
+#nutritionAdvanced[open]>summary{border-radius:12px 12px 0 0}
+#nutritionAdvanced[open]>.stack{padding-top:14px}
+#nutritionAdvanced .card{background:linear-gradient(145deg,rgba(20,29,22,.98),rgba(13,19,15,.98));box-shadow:none}
+#nutritionSummary .card,.home-stats .card{box-shadow:none}
+#nutritionSummary .card{border-radius:13px}
+#nutritionFoodSearchResults .catalog-item{min-width:0}
+#nutritionDiary .history-item{padding:15px 0}
+#nutritionDiary .btn{white-space:nowrap}
+#foodNutritionPreview{border:1px solid rgba(166,237,114,.2);background:rgba(166,237,114,.055)}
+#barcodeCamera video{border:1px solid var(--line)}
+#bodyWeightChart,#bodyMeasureChart{padding:15px;border:1px solid var(--line);border-radius:14px;background:rgba(6,11,7,.35)}
+.modalback{background:rgba(1,5,2,.78);backdrop-filter:blur(8px)}
+.modal{border-radius:20px;background:linear-gradient(145deg,#19231b,#101711);border-color:var(--line-strong);box-shadow:var(--shadow-float)}
+.modal h2{font-size:23px;letter-spacing:-.8px}
+.modalactions{gap:9px}
+.toast{border-radius:12px;background:#b5f482;color:#10190d;box-shadow:0 14px 40px rgba(0,0,0,.35);font-size:12px}
+.footer{padding-top:20px;border-top:1px solid rgba(169,196,171,.08);color:#66756a;letter-spacing:.35px}
+#authGate{background:rgba(5,9,6,.94)!important;backdrop-filter:blur(16px)}
+#authGate>.card{border-color:rgba(166,237,114,.22);border-radius:23px;box-shadow:var(--shadow-float);background:linear-gradient(145deg,#1a251c,#101711)}
+#authGate h2{font-size:25px;line-height:1.15;letter-spacing:-.9px}
+#authGate .muted{font-size:13px;line-height:1.65}
+#authGate .btn{min-height:47px}
+.home-hero{border-radius:25px;box-shadow:0 22px 50px rgba(0,0,0,.25)}
+.home-stat,.home-panel{border-color:var(--line)}
+.home-stat{background:linear-gradient(145deg,#19241b,#111813)}
+.home-panel{background:linear-gradient(145deg,#172119,#111813)}
+.home-day{border-color:var(--line);background:rgba(5,10,6,.35)}
+.home-routine-row{border-color:var(--line);background:rgba(5,10,6,.3)}
+.home-nutrition-empty{border-color:var(--line);background:rgba(5,10,6,.2)}
+/* Consistent section rhythm and card hierarchy */
+.view>.card+.card{margin-top:14px}
+.view>.grid>.card{height:100%}
+.view>.heading+.card{margin-top:0}
+.view>.heading+.grid{margin-top:0}
+#nutrition>.grid{gap:13px}
+#nutrition>.grid>.card{padding:21px}
+#nutrition>.grid>.card>.card{margin-top:15px;border-radius:14px}
+#progress>.card{margin-top:14px}
+#progress>.heading+.card{margin-top:0}
+#progress .weight-entry-grid{align-items:end}
+#progress .goal-weight-row .btn{min-height:43px}
+#progress .measure-grid{gap:10px}
+#libraryList .catalog-item{min-height:86px}
+#routineGrid .routine-card{min-height:170px}
+#historyList:empty:after{content:"Tus entrenamientos guardados aparecerán aquí.";display:block;padding:28px;color:var(--muted);text-align:center}
+@media(hover:hover){
+ .card:hover{border-color:rgba(169,196,171,.22)}
+ .routine-card:hover{border-color:rgba(166,237,114,.27)}
+}
+@media(max-width:1000px){
+ .app{padding:22px 22px 38px}
+ .nav{gap:3px}
+ .nav button{padding:10px 11px;font-size:11px}
+}
+@media(max-width:760px){
+ .app{padding:12px 13px calc(102px + env(safe-area-inset-bottom))}
+ .top{margin:0 -13px 17px;padding:9px 13px 11px}
+ .brand{gap:10px}.logo{width:39px;height:39px;border-radius:13px}
+ .brand strong{font-size:18px;letter-spacing:1.7px}
+ .brand small{font-size:8px;letter-spacing:1.55px}
+ #syncStatus{display:none}
+ .topright .btn{min-height:37px;padding:7px 10px}
+ .heading{padding-bottom:14px;margin-bottom:17px;gap:9px}
+ .heading h1{font-size:30px;letter-spacing:-1.1px}
+ .heading .muted{font-size:12px}
+ .heading>.btn{width:auto;min-height:42px}
+ .card{padding:16px;border-radius:16px}
+ .card h2{font-size:19px}
+ .grid{gap:10px}
+ .btn{min-height:44px;border-radius:11px}
+ .btn.small{min-height:37px}
+ .formgrid{gap:10px}
+ .field label{font-size:11px}
+ input,select,textarea{min-height:46px;border-radius:11px}
+ .exercise-block{padding:12px;border-radius:14px}
+ .setrow{gap:5px}
+ .sethead{font-size:9px}
+ .catalog-grid{gap:9px}
+ .catalog-item{padding:12px}
+ .timerbox{padding:12px;border-radius:14px}
+ .timerclock{font-size:27px}
+ .modal{border-radius:21px 21px 0 0}
+ .home-hero{border-radius:20px}
+ .home-panel,.home-stat{box-shadow:none}
+ .view>.card+.card{margin-top:10px}
+ #nutrition>.grid{gap:10px}
+ #nutrition>.grid>.card{padding:16px}
+ #nutrition>.grid>.card>.card{padding:13px}
+ #nutritionAdvanced>summary{padding:13px}
+ #nutritionDiary .history-item{gap:9px}
+ #progress>.card{margin-top:10px}
+ #bodyWeightChart,#bodyMeasureChart{padding:11px}
+ .footer{padding-top:15px}
+}
+@media(max-width:390px){
+ .app{padding-left:10px;padding-right:10px}
+ .top{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+ .brand small{letter-spacing:1.1px;font-size:7px}
+ .topright .btn{padding:6px 8px;font-size:10px}
+ .heading h1{font-size:27px}
+ .card{padding:13px}
+ .home-hero{padding:20px 15px 16px}
+ .home-hero h1{font-size:30px}
+ .setrow,.sethead{grid-template-columns:23px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 25px}
+ .setrow input{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 
 </style>
 </head>
@@ -408,7 +641,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  <div class="heading"><div><div class="eyebrow">TUS MEJORES MARCAS</div><h1>Récords personales</h1><div class="muted">Tu mejor peso registrado en cada ejercicio.</div></div></div>
  <div class="card" id="recordsList"></div>
 </section>
-<div class="footer">MPMFIT 2.0 · Hecho para entrenar con intención.</div>
+<div class="footer">MPMFIT · TRAINING / NUTRITION / PROGRESS</div>
 </div>
 <div id="authGate" style="position:fixed;inset:0;background:#080b09f2;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px">
  <div class="card" style="width:min(440px,100%);padding:26px">
