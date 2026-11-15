@@ -1,0 +1,42 @@
+name: MPMFIT Source ZIP
+
+on:
+  push:
+    branches: [mobile-first]
+    paths:
+      - '.github/workflows/source-zip.yml'
+      - 'MPMFIT 3.0.html'
+      - 'nutrition.js'
+      - 'cloud-sync.js'
+      - 'manifest.json'
+      - 'service-worker.js'
+      - 'icons/**'
+      - 'scripts/**'
+      - 'index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mobile-first
+        uses: actions/checkout@v4
+        with:
+          ref: mobile-first
+      - name: Create project ZIP
+        run: |
+          mkdir -p dist
+          zip -r dist/MPMFIT-mobile-first.zip . \
+            -x '.git/*' \
+               'node_modules/*' \
+               'android/.gradle/*' \
+               'www/*'
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: MPMFIT-mobile-first-source
+          path: dist/MPMFIT-mobile-first.zip
+          retention-days: 14
