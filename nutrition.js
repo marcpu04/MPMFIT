@@ -508,7 +508,7 @@ function saveBodyWeight(){
  const entries=getBodyWeightEntries(),existing=entries.find(x=>x.date===date);
  if(existing){if(!confirm('Ya existe un peso para ese día. ¿Quieres sustituirlo?'))return;existing.weight=weight}
  else entries.push({id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,weight});
- localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));document.getElementById('bodyWeightValue').value='';renderBodyWeight();toast('Peso guardado');
+ localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));document.getElementById('bodyWeightValue').value='';renderBodyWeight();renderBodyWeightGoal();toast('Peso guardado');
 }
 function deleteBodyWeight(id){
  const entries=getBodyWeightEntries().filter(x=>x.id!==id);localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));renderBodyWeight();toast('Registro eliminado');
@@ -525,13 +525,49 @@ function renderBodyMeasurements(){
  if(!entries.length){summary.innerHTML='<div class="empty">Aún no hay medidas guardadas. Puedes empezar por la cintura o registrar solo las que te interesen.</div>';history.innerHTML='';return}
  const latest=entries[entries.length-1],previous=entries.length>1?entries[entries.length-2]:null;
  summary.innerHTML='<div class="grid">'+Object.entries(labels).filter(([key])=>Number.isFinite(Number(latest[key]))&&latest[key]!==null).map(([key,label])=>{const old=previous&&Number.isFinite(Number(previous[key]))?Number(previous[key]):null,now=Number(latest[key]),delta=old===null?null:now-old;return '<div class="measure-stat"><span class="hint">'+label+'</span><b>'+now.toFixed(1)+' cm</b><span class="hint">'+(delta===null?'Sin comparación anterior':(delta>0?'+':'')+delta.toFixed(1)+' cm desde el registro anterior')+'</span></div>'}).join('')+'</div><div class="hint" style="margin-top:8px">Última medición: '+new Date(latest.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})+'</div>';
- history.innerHTML='<h3 style="margin-top:18px">Historial de medidas</h3>'+entries.slice().reverse().slice(0,6).map(x=>{const vals=Object.entries(labels).filter(([key])=>Number.isFinite(Number(x[key]))&&x[key]!==null).map(([key,label])=>label+': '+Number(x[key]).toFixed(1)+' cm').join(' · ');return '<div class="weight-history-row"><div><strong>'+new Date(x.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})+'</strong><div class="hint">'+vals+'</div></div><button class="btn ghost small" onclick="deleteBodyMeasurements(&quot;'+x.id+'&quot;)">Eliminar</button></div>'}).join('');
+ const metric=document.getElementById('bodyMeasureMetric')?.value||'waist',metricLabels={waist:'Cintura',chest:'Pecho',arm:'Brazo',thigh:'Muslo',bodyFat:'Grasa corporal'},points=entries.filter(x=>Number.isFinite(Number(x[metric]))&&x[metric]!==null).slice(-12);
+ const chartBox=document.getElementById('bodyMeasureChart');if(chartBox){if(!points.length)chartBox.innerHTML='<div class="hint">Todavía no hay registros de '+metricLabels[metric].toLowerCase()+'.</div>';else{const vals=points.map(x=>Number(x[metric])),min=Math.min(...vals),max=Math.max(...vals),range=Math.max(.5,max-min),w=640,h=170,pad=28,coords=points.map((x,i)=>({x:points.length===1?w/2:pad+i*(w-2*pad)/(points.length-1),y:pad+(max-Number(x[metric])+range*.12)/(range*1.24)*(h-2*pad),v:Number(x[metric]),date:x.date})),poly=coords.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');chartBox.innerHTML='<h3>'+metricLabels[metric]+' · evolución</h3><svg class="weight-chart" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Evolución de '+metricLabels[metric]+'"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="currentColor" opacity=".2"/><polyline points="'+poly+'" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+coords.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="var(--green)"><title>'+p.v.toFixed(1)+(metric==='bodyFat'?' %':' cm')+' · '+p.date+'</title></circle>').join('')+'</svg><div class="row" style="justify-content:space-between"><small class="hint">'+points[0].date+'</small><small class="hint">'+points[points.length-1].date+'</small></div>'}}history.innerHTML='<h3 style="margin-top:18px">Historial de medidas</h3>'+entries.slice().reverse().slice(0,6).map(x=>{const vals=Object.entries(labels).filter(([key])=>Number.isFinite(Number(x[key]))&&x[key]!==null).map(([key,label])=>label+': '+Number(x[key]).toFixed(1)+' cm').join(' · ');return '<div class="weight-history-row"><div><strong>'+new Date(x.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})+'</strong><div class="hint">'+vals+'</div></div><button class="btn ghost small" onclick="deleteBodyMeasurements(&quot;'+x.id+'&quot;)">Eliminar</button></div>'}).join('');
 }
 function saveBodyMeasurements(){
- const date=document.getElementById('bodyMeasureDate')?.value,fields={waist:'measureWaist',chest:'measureChest',arm:'measureArm',thigh:'measureThigh'},values={};if(!date){toast('Selecciona una fecha');return}
- for(const [key,id] of Object.entries(fields)){const raw=document.getElementById(id)?.value;if(raw==='')continue;const value=Number(String(raw).replace(',','.'));if(!Number.isFinite(value)||value<1||value>300){toast('Revisa las medidas: deben estar entre 1 y 300 cm');return}values[key]=value}
+ const date=document.getElementById('bodyMeasureDate')?.value,fields={waist:'measureWaist',chest:'measureChest',arm:'measureArm',thigh:'measureThigh',bodyFat:'measureBodyFat'},values={};if(!date){toast('Selecciona una fecha');return}
+ for(const [key,id] of Object.entries(fields)){const raw=document.getElementById(id)?.value;if(raw==='')continue;const value=Number(String(raw).replace(',','.'));if(!Number.isFinite(value)||value<1||value>(key==='bodyFat'?70:300)){toast('Revisa las medidas: grasa corporal entre 1 y 70 % y perímetros entre 1 y 300 cm');return}values[key]=value}
  if(!Object.keys(values).length){toast('Introduce al menos una medida');return}
- const entries=getBodyMeasureEntries(),index=entries.findIndex(x=>x.date===date);if(index>=0){if(!confirm('Ya hay medidas guardadas para ese día. ¿Quieres sustituirlas?'))return;entries[index]={...values,date,id:entries[index].id}}else entries.push({...values,date,id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()});
+ const entries=getBodyMeasureEntries(),index=entries.findIndex(x=>x.date===date);if(index>=0){if(!confirm('Ya hay medidas guardadas para ese día. ¿Quieres sustituirlas?'))return;entries[index]={...entries[index],...values,date,id:entries[index].id}}else entries.push({...values,date,id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()});
  localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));Object.values(fields).forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});renderBodyMeasurements();toast('Medidas guardadas');
 }
 function deleteBodyMeasurements(id){const entries=getBodyMeasureEntries().filter(x=>x.id!==id);localStorage.setItem(bodyMeasureStorageKey(),JSON.stringify(entries));renderBodyMeasurements();toast('Medición eliminada')}
+
+// Objetivo de peso configurable por usuario.
+function bodyWeightGoalKey(){return 'mpmfit_bodyweight_goal_v1_'+(currentUser?.id||'guest')}
+function renderBodyWeightGoal(){
+ const input=document.getElementById('bodyWeightGoal'),box=document.getElementById('bodyWeightGoalSummary');if(!input||!box)return;
+ const raw=localStorage.getItem(bodyWeightGoalKey()),goal=raw===null?NaN:Number(raw),entries=getBodyWeightEntries().sort((a,b)=>a.date.localeCompare(b.date));
+ if(Number.isFinite(goal)&&goal>=20&&goal<=400){input.value=goal;if(entries.length){const current=Number(entries[entries.length-1].weight),remaining=goal-current;box.textContent='Último peso: '+current.toFixed(1)+' kg · Objetivo: '+goal.toFixed(1)+' kg · '+(Math.abs(remaining)<.05?'Objetivo alcanzado':(remaining>0?'Faltan ':'Diferencia: ')+Math.abs(remaining).toFixed(1)+' kg')}else box.textContent='Objetivo guardado. Registra tu peso para ver cuánto falta.'}
+ else{input.value='';box.textContent='Sin objetivo establecido.'}
+}
+function saveBodyWeightGoal(){
+ const input=document.getElementById('bodyWeightGoal'),raw=input?.value;if(!raw){localStorage.removeItem(bodyWeightGoalKey());renderBodyWeightGoal();toast('Objetivo eliminado');return}
+ const value=Number(String(raw).replace(',','.'));if(!Number.isFinite(value)||value<20||value>400){toast('Introduce un objetivo entre 20 y 400 kg');return}
+ localStorage.setItem(bodyWeightGoalKey(),String(value));renderBodyWeightGoal();toast('Objetivo de peso guardado');
+}
+// Fotos privadas: se guardan en IndexedDB de este navegador, no en la nube.
+function progressPhotoDb(){return new Promise((resolve,reject)=>{const request=indexedDB.open('mpmfit_progress_photos',1);request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'})};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})}
+async function getProgressPhotos(){const db=await progressPhotoDb();return new Promise((resolve,reject)=>{const req=db.transaction('photos','readonly').objectStore('photos').getAll();req.onsuccess=()=>resolve(req.result.filter(x=>x.owner===(currentUser?.id||'guest')).sort((a,b)=>b.date.localeCompare(a.date)));req.onerror=()=>reject(req.error)})}
+async function saveProgressPhoto(){
+ const fileInput=document.getElementById('progressPhotoFile'),date=document.getElementById('progressPhotoDate')?.value,file=fileInput?.files?.[0];if(!file||!date){toast('Selecciona una fecha y una imagen');return}if(!file.type.startsWith('image/')){toast('El archivo debe ser una imagen');return}
+ try{
+  const image=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=reader.result};reader.onerror=reject;reader.readAsDataURL(file)});
+  const scale=Math.min(1,1400/Math.max(image.width,image.height)),canvas=document.createElement('canvas');canvas.width=Math.round(image.width*scale);canvas.height=Math.round(image.height*scale);canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+  const data=canvas.toDataURL('image/jpeg',.82),db=await progressPhotoDb(),record={id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),owner:currentUser?.id||'guest',date,data};
+  await new Promise((resolve,reject)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').put(record);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});
+  fileInput.value='';renderProgressPhotos();toast('Foto de progreso guardada');
+ }catch(e){console.error(e);toast('No se ha podido guardar la imagen en este dispositivo')}
+}
+async function renderProgressPhotos(){
+ const box=document.getElementById('progressPhotoGallery');if(!box)return;
+ try{const photos=await getProgressPhotos();box.innerHTML=photos.length?photos.map(p=>'<div class="progress-photo-card"><img src="'+p.data+'" alt="Foto de progreso del '+p.date+'"><div class="row" style="justify-content:space-between;align-items:center;margin-top:8px"><small>'+new Date(p.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})+'</small><button class="btn ghost small" onclick="deleteProgressPhoto(&quot;'+p.id+'&quot;)">Eliminar</button></div></div>').join(''):'<div class="empty">Todavía no has guardado fotos de progreso.</div>'}
+ catch(e){box.innerHTML='<div class="empty">El navegador no permite guardar fotos de progreso en este dispositivo.</div>'}
+}
+async function deleteProgressPhoto(id){
+ try{const db=await progressPhotoDb();await new Promise((resolve,reject)=>{const tx=db.transaction('photos','readwrite'),store=tx.objectStore('photos'),req=store.get(id);req.onsuccess=()=>{if(req.result?.owner===(currentUser?.id||'guest'))store.delete(id)};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});renderProgressPhotos();toast('Foto eliminada')}catch(e){toast('No se ha podido eliminar la foto')}
+}
