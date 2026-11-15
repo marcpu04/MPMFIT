@@ -478,3 +478,38 @@ function addBarcodeFoodNow(){
  document.getElementById('foodMeal').value=nutritionQuickMealValue();
  addNutritionEntry({name,amount:nutritionRememberedAmount(name,'g'),unit:'g',basis:'100g',kcal:values[0],protein:values[1],carbs:values[2],fat:values[3],barcode});
 }
+
+
+// Seguimiento del peso corporal, almacenado por separado para cada cuenta.
+function bodyWeightStorageKey(){return 'mpmfit_bodyweight_v1_'+(currentUser?.id||'guest')}
+function getBodyWeightEntries(){
+ try{const data=JSON.parse(localStorage.getItem(bodyWeightStorageKey())||'[]');return Array.isArray(data)?data.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&Number.isFinite(Number(x.weight))):[]}
+ catch(e){return []}
+}
+function renderBodyWeight(){
+ const dateInput=document.getElementById('bodyWeightDate'),valueInput=document.getElementById('bodyWeightValue');
+ if(!dateInput||!valueInput)return;
+ if(!dateInput.value){const now=new Date();dateInput.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
+ const entries=getBodyWeightEntries().sort((a,b)=>a.date.localeCompare(b.date));
+ const summary=document.getElementById('bodyWeightSummary'),chart=document.getElementById('bodyWeightChart'),history=document.getElementById('bodyWeightHistory');
+ if(!entries.length){summary.innerHTML='<div class="empty">Todavía no has registrado tu peso. Añade la primera medición para empezar a ver tu evolución.</div>';chart.innerHTML='';history.innerHTML='';return}
+ const latest=entries[entries.length-1],previous=entries.length>1?entries[entries.length-2]:null,delta=previous?latest.weight-previous.weight:null;
+ const deltaText=delta===null?'Primer registro':(delta>0?'+':'')+delta.toFixed(1)+' kg respecto al registro anterior';
+ summary.innerHTML='<div class="grid"><div class="card stat"><span>Último peso</span><b>'+Number(latest.weight).toFixed(1)+' <small>kg</small></b><span>'+new Date(latest.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})+'</span></div><div class="card stat"><span>Cambio desde la medición anterior</span><b>'+(delta===null?'—':(delta>0?'+':'')+delta.toFixed(1))+' <small>'+(delta===null?'':'kg')+'</small></b><span>'+deltaText+'</span></div></div>';
+ const points=entries.slice(-14),min=Math.min(...points.map(x=>Number(x.weight))),max=Math.max(...points.map(x=>Number(x.weight))),range=Math.max(1,max-min),w=640,h=190,pad=30;
+ const coords=points.map((x,i)=>({x:points.length===1?w/2:pad+i*(w-2*pad)/(points.length-1),y:pad+(max-Number(x.weight)+range*.12)/(range*1.24)*(h-2*pad),weight:Number(x.weight),date:x.date}));
+ const poly=coords.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+ chart.innerHTML='<h3>Evolución del peso</h3><div class="hint">Últimos '+points.length+' registros · No te obsesiones con las variaciones de un solo día.</div><svg class="weight-chart" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Gráfico de evolución del peso corporal"><line x1="'+pad+'" y1="'+(h-pad)+'" x2="'+(w-pad)+'" y2="'+(h-pad)+'" stroke="currentColor" opacity=".2"/><polyline points="'+poly+'" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+coords.map(p=>'<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4" fill="var(--green)"><title>'+p.weight.toFixed(1)+' kg · '+p.date+'</title></circle>').join('')+'</svg><div class="row" style="justify-content:space-between"><small class="hint">'+points[0].date+'</small><small class="hint">'+points[points.length-1].date+'</small></div>';
+ history.innerHTML='<h3 style="margin-top:18px">Registros recientes</h3>'+entries.slice().reverse().slice(0,6).map(x=>'<div class="weight-history-row"><div><strong>'+Number(x.weight).toFixed(1)+' kg</strong><div class="hint">'+new Date(x.date+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+'</div></div><button class="btn ghost small" onclick="deleteBodyWeight(\''+x.id+'\')">Eliminar</button></div>').join('');
+}
+function saveBodyWeight(){
+ const date=document.getElementById('bodyWeightDate')?.value,raw=document.getElementById('bodyWeightValue')?.value,weight=Number(String(raw||'').replace(',','.'));
+ if(!date||!raw||!Number.isFinite(weight)||weight<20||weight>400){toast('Introduce una fecha y un peso válido');return}
+ const entries=getBodyWeightEntries(),existing=entries.find(x=>x.date===date);
+ if(existing){if(!confirm('Ya existe un peso para ese día. ¿Quieres sustituirlo?'))return;existing.weight=weight}
+ else entries.push({id:typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date,weight});
+ localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));document.getElementById('bodyWeightValue').value='';renderBodyWeight();toast('Peso guardado');
+}
+function deleteBodyWeight(id){
+ const entries=getBodyWeightEntries().filter(x=>x.id!==id);localStorage.setItem(bodyWeightStorageKey(),JSON.stringify(entries));renderBodyWeight();toast('Registro eliminado');
+}
