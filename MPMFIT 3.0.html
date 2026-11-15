@@ -205,7 +205,8 @@ function queueCloudSave(){
   setSyncStatus('● GUARDANDO…');
   const uidUser=currentUser.id;
   const pending=loadPendingDeletes();
-  for(const [table,ids] of Object.entries(pending)){
+  for(const table of ['workouts','routines']){
+   const ids=pending[table]||[];
    if(!ids.length)continue;
    const result=await supabaseClient.from(table).delete().eq('user_id',uidUser).in('id',ids);
    if(result.error)throw result.error;
