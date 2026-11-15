@@ -87,6 +87,119 @@ input,select,textarea{font-size:16px}
   .stat b{font-size:22px}
 }
 @media(min-width:761px){.mobile-nav,.mobile-more{display:none!important}}
+
+/* MPMFIT 2026 — visual refresh: dashboard, hierarchy and interaction */
+:root{--bg:#0b0e0c;--panel:#141a16;--panel2:#1a211c;--line:#29332c;--green:#9be66b;--green2:#b8ff83;--muted:#94a096;--text:#f0f5f0;--red:#ff7777;--surface:#141b16;--surface-raised:#19221b}
+body{background:radial-gradient(ellipse at 50% -18%,rgba(103,166,78,.16),transparent 42%),radial-gradient(circle at 100% 50%,rgba(44,78,49,.09),transparent 34%),var(--bg);letter-spacing:.005em}
+button{transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease}
+button:active{transform:scale(.98)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.card{background:linear-gradient(145deg,rgba(25,34,27,.97),rgba(17,23,19,.98));border-color:rgba(116,145,119,.19);box-shadow:0 8px 24px rgba(0,0,0,.12);transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.card h3{letter-spacing:-.025em}
+.btn{box-shadow:0 5px 16px rgba(155,230,107,.12)}
+.btn.secondary,.btn.ghost{box-shadow:none}
+.nav button,.mobile-nav button,.mobile-more button{transition:background .18s ease,color .18s ease,border-color .18s ease}
+.home-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;min-height:250px;margin:0 0 28px;padding:30px 32px;border:1px solid rgba(155,230,107,.2);border-radius:24px;background:radial-gradient(circle at 84% 20%,rgba(155,230,107,.17),transparent 28%),linear-gradient(115deg,#1b281d 0%,#121a15 58%,#111713 100%);box-shadow:0 18px 45px rgba(0,0,0,.2)}
+.home-hero:before{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(135deg,transparent 55%,rgba(155,230,107,.045));pointer-events:none}
+.home-hero-copy{max-width:590px;z-index:1}
+.home-kicker{display:flex;align-items:center;gap:9px;color:#c4d2c4;font-size:10px;font-weight:850;letter-spacing:2px}
+.home-live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 13px rgba(155,230,107,.8)}
+.home-date{margin-top:22px;color:#a7b4a8;font-size:13px;text-transform:capitalize}
+.home-hero h1{margin:7px 0 9px;font-size:clamp(34px,5vw,52px);line-height:1;letter-spacing:-2.2px;font-weight:850}
+.home-hero p{margin:0;color:#aab6ac;font-size:14px;max-width:460px}
+.home-hero-actions{display:flex;flex-direction:column;gap:9px;min-width:215px;z-index:1}
+.home-hero-actions .btn{min-height:48px;text-align:left;display:flex;align-items:center;justify-content:space-between;border-radius:12px;padding:12px 15px}
+.home-primary{background:var(--green);color:#10170d}
+.home-secondary{background:rgba(255,255,255,.045);color:#e6eee6;border:1px solid rgba(255,255,255,.13);box-shadow:none!important}
+.home-hero-mark{position:absolute;right:25%;top:-74px;font-size:360px;line-height:1;font-weight:1000;color:rgba(155,230,107,.035);letter-spacing:-.12em;pointer-events:none;z-index:-1}
+.home-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 0 13px}
+.home-section-head h2{font-size:20px;letter-spacing:-.6px;margin:4px 0 0}
+.home-section-note{font-size:11px;color:#78877b}
+.home-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.home-stat{padding:16px 17px;border-radius:17px;min-width:0}
+.home-stat-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#a3b0a5;font-size:12px;font-weight:650}
+.home-stat-icon{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:rgba(155,230,107,.09);color:var(--green);font-size:16px}
+.home-stat>b{display:block;margin:13px 0 2px;font-size:31px;line-height:1;letter-spacing:-1px;font-weight:850;font-variant-numeric:tabular-nums}
+.home-stat>small{color:#829084;font-size:11px}
+.home-dashboard{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
+.home-panel{padding:19px 20px;border-radius:18px;min-width:0}
+.home-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+.home-panel-heading h3{margin:4px 0 0;font-size:18px}
+.home-panel-badge{font-size:10px;color:#b4c1b5;border:1px solid rgba(155,230,107,.18);background:rgba(155,230,107,.06);padding:6px 9px;border-radius:30px;white-space:nowrap}
+.home-panel-symbol{font-size:21px;color:var(--green);opacity:.8}
+.home-week-summary{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:18px}
+.home-week-summary strong{font-size:19px;letter-spacing:-.4px}
+.home-week-summary span{font-size:11px;color:#879489}
+.home-week-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.home-day{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 3px 8px;border:1px solid rgba(130,151,132,.12);border-radius:12px;background:rgba(5,10,6,.25);color:#839084}
+.home-day span{font-size:10px;font-weight:750}
+.home-day b{font-size:15px;color:#d9e2da}
+.home-day i{display:grid;place-items:center;width:17px;height:17px;border-radius:50%;font-size:10px;font-style:normal;background:rgba(255,255,255,.04);color:transparent}
+.home-day.is-active{background:rgba(155,230,107,.1);border-color:rgba(155,230,107,.34)}
+.home-day.is-active i{background:var(--green);color:#13200f}
+.home-day.is-today{box-shadow:inset 0 0 0 1px rgba(155,230,107,.45)}
+.home-last-panel{display:flex;flex-direction:column}
+.home-last-session{flex:1}
+.home-last-name{font-size:21px;font-weight:800;letter-spacing:-.6px;color:#edf4ed;margin:5px 0}
+.home-last-date{font-size:12px;color:#8e9c90}
+.home-last-metrics{display:flex;gap:18px;margin-top:19px;padding-top:14px;border-top:1px solid rgba(130,151,132,.15);color:#8d9b8f;font-size:11px}
+.home-last-metrics b{color:var(--green);font-size:15px;margin-right:3px}
+.home-link-btn,.home-text-btn{background:transparent;border:0;box-shadow:none!important;color:var(--green);padding:8px 0;min-height:38px;font-size:12px}
+.home-link-btn{margin-top:14px;align-self:flex-start}
+.home-routines-panel{grid-column:1}
+.home-nutrition-panel{grid-column:2}
+.home-text-btn{white-space:nowrap}
+.home-routines-list{display:grid;gap:8px}
+.home-routine-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid rgba(130,151,132,.13);border-radius:13px;background:rgba(5,10,6,.22);min-width:0}
+.home-routine-mark{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:rgba(155,230,107,.12);color:var(--green);font-size:13px;font-weight:950}
+.home-routine-info{flex:1;min-width:0}
+.home-routine-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.home-routine-info small{display:block;margin-top:3px;color:#879489;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-routine-action{flex:0 0 auto;min-height:34px;padding:6px 9px;background:rgba(155,230,107,.1);color:var(--green);border:1px solid rgba(155,230,107,.2);box-shadow:none;font-size:11px}
+.home-add-routine{width:100%;margin-top:10px;background:transparent;color:#aab8ac;border:1px dashed rgba(130,151,132,.25);box-shadow:none;font-size:12px}
+.home-nutrition-content{min-height:128px}
+.home-nutrition-empty{padding:15px;border:1px dashed rgba(130,151,132,.2);border-radius:12px;color:#8e9b90;font-size:12px;line-height:1.55}
+.home-calorie-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 16px}
+.home-calorie-row>div:first-child>span{display:block;color:#8e9b90;font-size:11px;margin-bottom:5px}
+.home-calorie-row strong{font-size:24px;letter-spacing:-.7px}
+.home-calorie-row strong small{font-size:11px;color:#8e9b90;font-weight:500;letter-spacing:0}
+.home-calorie-ring{--progress:0%;width:62px;height:62px;flex:0 0 62px;display:grid;place-items:center;border-radius:50%;background:conic-gradient(var(--green) var(--progress),#29362b 0);position:relative}
+.home-calorie-ring:before{content:"";position:absolute;inset:5px;border-radius:50%;background:#172019}
+.home-calorie-ring span{position:relative;font-size:12px;font-weight:850;color:#eaf3e9}
+.home-macro-list{display:grid;gap:10px}
+.home-macro>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px}
+.home-macro>div:first-child span{color:#9aa79b}
+.home-macro>div:first-child b{color:#dce6dd;font-size:11px;font-variant-numeric:tabular-nums}
+.home-macro-track{height:5px;margin-top:5px;border-radius:9px;background:#29342b;overflow:hidden}
+.home-macro-track i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#79b94f,var(--green2))}
+.home-goal-label{margin-top:12px;color:#8e9b90;font-size:10px}
+@media(hover:hover){.home-stat:hover,.home-panel:hover{border-color:rgba(155,230,107,.28);transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.2)}.home-routine-row:hover{border-color:rgba(155,230,107,.3)}}
+@media(max-width:900px){.home-hero{min-height:230px;padding:25px}.home-dashboard{grid-template-columns:1fr 1fr}.home-week-panel{grid-column:1/-1}.home-routines-panel{grid-column:1}.home-nutrition-panel{grid-column:2}}
+@media(max-width:760px){
+ .home-hero{display:block;min-height:0;margin:0 -1px 22px;padding:23px 19px 18px;border-radius:20px}
+ .home-date{margin-top:17px;font-size:12px}
+ .home-hero h1{font-size:36px;letter-spacing:-1.7px}
+ .home-hero p{font-size:12px;max-width:300px}
+ .home-hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px;min-width:0}
+ .home-hero-actions .btn{min-width:0;min-height:48px;padding:10px 11px;font-size:11px;gap:5px}
+ .home-hero-mark{right:-5px;top:-34px;font-size:230px}
+ .home-section-head{margin-bottom:10px}.home-section-head h2{font-size:18px}
+ .home-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:10px}
+ .home-stat{padding:13px;border-radius:15px}
+ .home-stat>b{font-size:27px;margin-top:10px}
+ .home-stat-top{font-size:11px}.home-stat-icon{width:26px;height:26px}
+ .home-dashboard{grid-template-columns:1fr;gap:10px}
+ .home-panel{grid-column:1!important;padding:16px;border-radius:16px}
+ .home-panel-heading{margin-bottom:13px}
+ .home-panel-heading h3{font-size:17px}
+ .home-week-days{gap:5px}
+ .home-day{padding:9px 2px 7px;gap:6px;border-radius:10px}
+ .home-day span{font-size:9px}.home-day b{font-size:14px}
+ .home-last-metrics{margin-top:14px}
+ .home-nutrition-content{min-height:0}
+}
+@media(max-width:370px){.home-hero h1{font-size:31px}.home-hero-actions{grid-template-columns:1fr}.home-stat>b{font-size:24px}.home-panel{padding:14px}.home-week-days{gap:3px}}
+
 </style>
 </head>
 <body>
@@ -115,15 +228,47 @@ input,select,textarea{font-size:16px}
 </div>
 
 <section id="home" class="view active">
- <div class="heading"><div><div class="eyebrow">TU ESPACIO DE ENTRENAMIENTO</div><h1>Vamos a trabajar.</h1><div class="muted" id="todayText"></div></div><button class="btn" onclick="showView('train')">＋ Empezar entrenamiento</button></div>
- <div class="grid">
-  <div class="card stat"><span>Rutinas creadas</span><b id="statRoutines">0</b><span>Planes guardados</span></div>
-  <div class="card stat"><span>Entrenamientos</span><b id="statSessions">0</b><span>Sesiones registradas</span></div>
-  <div class="card stat"><span>Ejercicios</span><b id="statExercises">0</b><span>En tus rutinas</span></div>
-  <div class="card stat"><span>Volumen total</span><b id="statVolume">0</b><span>kg acumulados</span></div>
-  <div class="card wide"><div class="row"><h3>Mis rutinas</h3><button class="btn ghost small" onclick="showView('routines')">Ver todas →</button></div><div id="homeRoutines" class="stack"></div></div>
-  <div class="card side"><h3>Último entrenamiento</h3><div id="lastSession" class="muted">Todavía no has registrado ninguna sesión.</div></div>
-  <div class="card full"><div class="row"><div><h3>Empieza por aquí</h3><div class="muted">Crea tu primera rutina y añade ejercicios, series y repeticiones.</div></div><button class="btn" onclick="openRoutineModal()">Crear rutina</button></div></div>
+ <div class="home-hero">
+  <div class="home-hero-copy">
+   <div class="home-kicker"><span class="home-live-dot"></span> TU ESPACIO · TU PROGRESO</div>
+   <div class="home-date" id="todayText"></div>
+   <h1 id="homeGreeting">Vamos a por ello.</h1>
+   <p>Entrena con intención. Registra cada avance. Construye tu mejor versión.</p>
+  </div>
+  <div class="home-hero-actions">
+   <button class="btn home-primary" onclick="showView('train')"><span>＋</span> Empezar entrenamiento</button>
+   <button class="btn home-secondary" onclick="showView('nutrition')">Registrar comida <span>↗</span></button>
+  </div>
+  <div class="home-hero-mark" aria-hidden="true">M</div>
+ </div>
+ <div class="home-section-head"><div><div class="eyebrow">TU ACTIVIDAD</div><h2>Resumen general</h2></div><span class="home-section-note">Datos de tu cuenta</span></div>
+ <div class="home-stats">
+  <div class="card home-stat"><div class="home-stat-top"><span>Entrenamientos</span><span class="home-stat-icon">↗</span></div><b id="statSessions">0</b><small>Sesiones registradas</small></div>
+  <div class="card home-stat"><div class="home-stat-top"><span>Rutinas</span><span class="home-stat-icon">▤</span></div><b id="statRoutines">0</b><small>Planes guardados</small></div>
+  <div class="card home-stat"><div class="home-stat-top"><span>Ejercicios</span><span class="home-stat-icon">◈</span></div><b id="statExercises">0</b><small>En tus rutinas</small></div>
+  <div class="card home-stat"><div class="home-stat-top"><span>Volumen total</span><span class="home-stat-icon">⌁</span></div><b id="statVolume">0</b><small>kg × repeticiones</small></div>
+ </div>
+ <div class="home-dashboard">
+  <div class="card home-panel home-week-panel">
+   <div class="home-panel-heading"><div><div class="eyebrow">CONSTANCIA</div><h3>Tu semana</h3></div><span class="home-panel-badge">Últimos 7 días</span></div>
+   <div id="homeWeekSummary" class="home-week-summary">Aún no hay actividad registrada.</div>
+   <div id="homeWeekDays" class="home-week-days"></div>
+  </div>
+  <div class="card home-panel home-last-panel">
+   <div class="home-panel-heading"><div><div class="eyebrow">TU ÚLTIMA SESIÓN</div><h3>Actividad reciente</h3></div><span class="home-panel-symbol">◷</span></div>
+   <div id="lastSession" class="home-last-session muted">Todavía no has registrado ninguna sesión.</div>
+   <button class="btn home-link-btn" onclick="showView('history')">Ver historial <span>→</span></button>
+  </div>
+  <div class="card home-panel home-routines-panel">
+   <div class="home-panel-heading"><div><div class="eyebrow">PLANIFICACIÓN</div><h3>Tus rutinas</h3></div><button class="btn home-text-btn" onclick="showView('routines')">Ver todas →</button></div>
+   <div id="homeRoutines" class="home-routines-list"></div>
+   <button class="btn home-add-routine" onclick="openRoutineModal()">＋ Crear nueva rutina</button>
+  </div>
+  <div class="card home-panel home-nutrition-panel">
+   <div class="home-panel-heading"><div><div class="eyebrow">NUTRICIÓN</div><h3>Balance de hoy</h3></div><span class="home-panel-symbol">◉</span></div>
+   <div id="homeNutritionSummary" class="home-nutrition-content"><div class="home-nutrition-empty">Tu resumen nutricional aparecerá aquí cuando configures tus objetivos.</div></div>
+   <button class="btn home-link-btn" onclick="showView('nutrition')">Abrir nutrición <span>→</span></button>
+  </div>
  </div>
 </section>
 
@@ -592,7 +737,53 @@ function renderRecords(){
  const items=Object.entries(best).sort((a,b)=>a[0].localeCompare(b[0]));
  document.getElementById('recordsList').innerHTML=items.length?items.map(([name,v])=>`<div class="pr-item"><div><strong>${esc(name)}</strong><div class="hint">${new Date(v.date+'T12:00:00').toLocaleDateString('es-ES')} · ${esc(v.reps)} reps</div></div><div class="pr-value">${v.weight} kg</div></div>`).join(''):'<div class="empty">Aún no hay récords. Guarda entrenamientos con pesos para que aparezcan aquí.</div>';
 }
-function renderHome(){document.getElementById('statRoutines').textContent=db.routines.length;document.getElementById('statSessions').textContent=db.sessions.length;document.getElementById('statExercises').textContent=db.routines.reduce((a,r)=>a+r.exercises.length,0);document.getElementById('statVolume').textContent=Math.round(totalVolume()).toLocaleString('es-ES');let hr=document.getElementById('homeRoutines');hr.innerHTML=db.routines.length?db.routines.slice(0,5).map(r=>`<div class="exercise"><div><strong>${esc(r.name)}</strong><small>${r.exercises.length} ejercicios · ${esc(r.desc||'')}</small></div><button class="btn secondary small" onclick="startRoutine('${r.id}')">Entrenar</button></div>`).join(''):'<div class="empty">Aún no has creado ninguna rutina.</div>';let last=db.sessions[0];document.getElementById('lastSession').innerHTML=last?`<div class="biggreen">${esc(last.routine)}</div><div class="muted">${new Date(last.date+'T12:00:00').toLocaleDateString('es-ES')} · ${last.exercises.length} ejercicios</div>`:'Todavía no has registrado ninguna sesión.'}
+function homeDateKey(date){
+ const d=new Date(date.getTime()-date.getTimezoneOffset()*60000);
+ return d.toISOString().slice(0,10);
+}
+function renderHome(){
+ const today=new Date(),todayKey=homeDateKey(today),hour=today.getHours();
+ const greeting=hour<12?'Buenos días.':hour<20?'Buenas tardes.':'Buenas noches.';
+ const greetingEl=document.getElementById('homeGreeting');if(greetingEl)greetingEl.textContent=greeting;
+ const dateEl=document.getElementById('todayText');if(dateEl)dateEl.textContent=today.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ document.getElementById('statRoutines').textContent=db.routines.length;
+ document.getElementById('statSessions').textContent=db.sessions.length;
+ document.getElementById('statExercises').textContent=db.routines.reduce((a,r)=>a+r.exercises.length,0);
+ document.getElementById('statVolume').textContent=Math.round(totalVolume()).toLocaleString('es-ES');
+ const hr=document.getElementById('homeRoutines');
+ hr.innerHTML=db.routines.length?db.routines.slice(0,4).map(r=>'<div class="home-routine-row"><div class="home-routine-mark">M</div><div class="home-routine-info"><strong>'+esc(r.name)+'</strong><small>'+r.exercises.length+' ejercicios'+(r.desc?' · '+esc(r.desc):'')+'</small></div><button class="btn home-routine-action" onclick="startRoutine(\''+r.id+'\')">Entrenar <span>→</span></button></div>').join(''):'<div class="home-nutrition-empty">Todavía no has creado ninguna rutina. Organiza tu semana empezando por una división de entrenamiento.</div>';
+ const last=db.sessions[0],lastBox=document.getElementById('lastSession');
+ if(last){
+  const volume=last.exercises.reduce((sum,e)=>sum+e.sets.reduce((a,x)=>a+(Number(x.weight)||0)*(Number(x.reps)||0),0),0);
+  lastBox.innerHTML='<div class="home-last-name">'+esc(last.routine)+'</div><div class="home-last-date">'+new Date(last.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})+'</div><div class="home-last-metrics"><span><b>'+last.exercises.length+'</b> ejercicios</span><span><b>'+Math.round(volume).toLocaleString('es-ES')+'</b> kg vol.</span></div>';
+ }else{
+  lastBox.innerHTML='<div class="home-nutrition-empty">Todavía no hay sesiones. Tu primer entrenamiento aparecerá aquí.</div>';
+ }
+ const start=new Date(today);start.setHours(0,0,0,0);start.setDate(start.getDate()-6);
+ const dayNames=['D','L','M','X','J','V','S'],days=[],counts={};
+ for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);const key=homeDateKey(d);counts[key]=0;days.push({date:d,key,label:dayNames[d.getDay()],num:d.getDate()})}
+ db.sessions.forEach(session=>{if(Object.prototype.hasOwnProperty.call(counts,session.date))counts[session.date]++});
+ const activeDays=days.filter(d=>counts[d.key]>0).length,weekSessions=days.reduce((n,d)=>n+counts[d.key],0);
+ const weekSummary=document.getElementById('homeWeekSummary');
+ if(weekSummary)weekSummary.innerHTML='<strong>'+activeDays+' de 7 días activos</strong><span>'+weekSessions+' entrenamientos esta semana</span>';
+ const weekDays=document.getElementById('homeWeekDays');
+ if(weekDays)weekDays.innerHTML=days.map(d=>'<div class="home-day '+(counts[d.key]?'is-active':'')+(d.key===todayKey?' is-today':'')+'"><span>'+d.label+'</span><b>'+d.num+'</b><i>'+(counts[d.key]?'✓':'')+'</i></div>').join('');
+ const nutritionBox=document.getElementById('homeNutritionSummary');
+ if(nutritionBox){
+  if(typeof nutritionData!=='undefined'&&typeof nutritionTotals==='function'){
+   const totals=nutritionTotals(todayKey),targets=nutritionData.targets||{},goalName=typeof nutritionGoalName==='function'?nutritionGoalName(nutritionData.goal):'Objetivo diario';
+   const macros=[['Proteínas',totals.protein,targets.protein,'g'],['Hidratos',totals.carbs,targets.carbs,'g'],['Grasas',totals.fat,targets.fat,'g']];
+   const kcalPct=targets.kcal>0?Math.min(100,totals.kcal/targets.kcal*100):0;
+   if(targets.kcal>0){
+    nutritionBox.innerHTML='<div class="home-calorie-row"><div><span>Consumidas</span><strong>'+Math.round(totals.kcal).toLocaleString('es-ES')+' <small>/ '+targets.kcal.toLocaleString('es-ES')+' kcal</small></strong></div><div class="home-calorie-ring" style="--progress:'+kcalPct+'%"><span>'+Math.round(kcalPct)+'%</span></div></div><div class="home-macro-list">'+macros.map(m=>'<div class="home-macro"><div><span>'+m[0]+'</span><b>'+Math.round(m[1])+' / '+m[2]+' '+m[3]+'</b></div><div class="home-macro-track"><i style="width:'+(m[2]>0?Math.min(100,m[1]/m[2]*100):0)+'%"></i></div></div>').join('')+'</div><div class="home-goal-label">'+goalName+'</div>';
+   }else{
+    nutritionBox.innerHTML='<div class="home-nutrition-empty">Ya puedes registrar alimentos. Configura tus calorías y macros para ver aquí tu balance diario.</div>';
+   }
+  }else{
+   nutritionBox.innerHTML='<div class="home-nutrition-empty">Conecta tu cuenta para consultar tu resumen nutricional.</div>';
+  }
+ }
+}
 function renderAll(){renderRoutines();renderHome();renderHistory();if(document.getElementById('progress').classList.contains('active'))setupProgress();if(document.getElementById('records')?.classList.contains('active'))renderRecords();if(document.getElementById('calendar')?.classList.contains('active'))renderCalendar()}
 function openBackup(){openModal(`<h2>Copia de seguridad</h2><p class="muted">Tus datos se guardan en este navegador. Exporta un archivo para conservar una copia o importarlo más adelante.</p><div class="stack"><button class="btn" onclick="exportData()">↓ Exportar mis datos (.json)</button><div class="field"><label>Importar una copia JSON</label><input id="importFile" type="file" accept=".json,application/json"></div><button class="btn secondary" onclick="importData()">Importar copia</button></div><div class="modalactions"><button class="btn ghost" onclick="closeModal()">Cerrar</button></div>`)}
 function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MPMFIT-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);toast('Copia exportada')}
