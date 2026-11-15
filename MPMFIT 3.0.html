@@ -158,8 +158,8 @@ async function activateUser(user){
   ]);
   if(re)throw re;if(we)throw we;
   const pending=loadPendingDeletes();
-  const remoteRoutines=(routines||[]).filter(r=>!pending.routines.includes(r.id)).map(r=>({id:uid(),cloud_id:r.id,name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]}));
-  const remoteSessions=(workouts||[]).filter(w=>!pending.workouts.includes(w.id)).map(w=>({id:uid(),cloud_id:w.id,routine_cloud_id:w.routine_id||null,date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}));
+  const remoteRoutines=(routines||[]).filter(r=>!pending.routines.includes(r.id)).map(r=>({id:uid(),cloud_id:r.id,updated_at:r.updated_at,name:r.name,desc:'',exercises:Array.isArray(r.exercises)?r.exercises:[]}));
+  const remoteSessions=(workouts||[]).filter(w=>!pending.workouts.includes(w.id)).map(w=>({id:uid(),cloud_id:w.id,routine_cloud_id:w.routine_id||null,updated_at:w.updated_at,date:String(w.date||new Date().toISOString()).slice(0,10),routine:w.name||'Entrenamiento libre',exercises:Array.isArray(w.exercises)?w.exercises:[]}));
   const mergeByCloudId=(localRows,remoteRows)=>{
    const byId=new Map(localRows.filter(x=>x.cloud_id).map(x=>[x.cloud_id,x]));
    remoteRows.forEach(remote=>{
