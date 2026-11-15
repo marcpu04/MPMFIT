@@ -114,6 +114,7 @@ const ACCOUNT_KEY_PREFIX='mpmfit_v1_user_';
 const PENDING_DELETE_PREFIX='mpmfit_v1_pending_deletes_';
 const TRAINING_DRAFT_PREFIX='mpmfit_v1_training_draft_';
 const LEGACY_OWNER_KEY='mpmfit_v1_legacy_owner';
+const LOCAL_DEMO_MODE=['localhost','127.0.0.1'].includes(window.location.hostname);
 const SUPABASE_URL='https://lytssgscurteyzgwkjvp.supabase.co';
 const SUPABASE_KEY='sb_publishable_TKAuKIfsuhOErQ5FvsF6LA_kxOGLc06';
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -411,14 +412,25 @@ function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'appli
 function importData(){let f=document.getElementById('importFile').files[0];if(!f)return toast('Selecciona un archivo');let reader=new FileReader();reader.onload=()=>{try{let d=JSON.parse(reader.result);if(!Array.isArray(d.routines)||!Array.isArray(d.sessions))throw Error();if(!confirm('Esto sustituirá los datos actuales. ¿Continuar?'))return;db=d;persist();closeModal();toast('Copia importada')}catch(e){toast('El archivo no parece una copia válida de MPMFIT')}};reader.readAsText(f)}
 document.getElementById('todayText').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 renderAll();setupTraining();formatTimer();
-(async()=>{
- const {data:{session}}=await supabaseClient.auth.getSession();
- if(session?.user)await activateUser(session.user);
- else{document.getElementById('authGate').style.display='flex';setSyncStatus('● SIN CONECTAR')}
- supabaseClient.auth.onAuthStateChange((event)=>{
-  if(event==='SIGNED_OUT'){currentUser=null;cloudReady=false;activeTraining=[];document.getElementById('authGate').style.display='flex';document.getElementById('accountButton').textContent='Iniciar sesión';setSyncStatus('● SIN CONECTAR')}
- });
-})();
+if(LOCAL_DEMO_MODE){
+ currentUser={id:'local-demo'};
+ db=loadDB(storageKey());
+ document.getElementById('authGate').style.display='none';
+ const accountButton=document.getElementById('accountButton');
+ accountButton.textContent='Modo pruebas';
+ accountButton.disabled=true;
+ setSyncStatus('● MODO LOCAL · SIN SINCRONIZACIÓN');
+ renderAll();setupTraining();restoreTrainingDraft();
+}else{
+ (async()=>{
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(session?.user)await activateUser(session.user);
+  else{document.getElementById('authGate').style.display='flex';setSyncStatus('● SIN CONECTAR')}
+  supabaseClient.auth.onAuthStateChange((event)=>{
+   if(event==='SIGNED_OUT'){currentUser=null;cloudReady=false;activeTraining=[];document.getElementById('authGate').style.display='flex';document.getElementById('accountButton').textContent='Iniciar sesión';setSyncStatus('● SIN CONECTAR')}
+  });
+ })();
+}
 </script>
 </body>
 </html>
