@@ -20,7 +20,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
  <div class="topright"><span class="pill" id="syncStatus">● SIN CONECTAR</span><button class="btn secondary small" id="accountButton" onclick="openAccount()">Iniciar sesión</button><button class="btn secondary small" onclick="openBackup()">Copia de seguridad</button></div>
 </header>
 <nav class="nav">
- <button class="active" data-view="home">▦ Inicio</button><button data-view="routines">▤ Rutinas</button><button data-view="train">＋ Entrenar</button><button data-view="library">▧ Ejercicios</button><button data-view="history">◷ Historial</button><button data-view="calendar">▦ Calendario</button><button data-view="progress">↗ Progreso</button><button data-view="records">★ Récords</button>
+ <button class="active" data-view="home">▦ Inicio</button><button data-view="routines">▤ Rutinas</button><button data-view="train">＋ Entrenar</button><button data-view="library">▧ Ejercicios</button><button data-view="history">◷ Historial</button><button data-view="calendar">▦ Calendario</button><button data-view="progress">↗ Progreso</button><button data-view="records">★ Récords</button><button data-view="nutrition">🥗 Nutrición</button>
 </nav>
 
 <section id="home" class="view active">
@@ -60,6 +60,52 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
  </div>
 </section>
 
+<section id="nutrition" class="view">
+ <div class="heading"><div><div class="eyebrow">ALIMENTACIÓN Y OBJETIVOS</div><h1>MPMFIT Nutrition</h1><div class="muted">Controla calorías y macronutrientes de cada día.</div></div><span class="pill">Datos guardados en este dispositivo</span></div>
+ <div class="grid">
+  <div class="card full">
+   <div class="row"><div><h3>Objetivos diarios</h3><div class="hint">Configura volumen, definición o mantenimiento y tus objetivos de calorías y macros.</div></div><button class="btn secondary small" onclick="toggleNutritionGoals()">Editar objetivos</button></div>
+   <div id="nutritionGoalsView" class="grid" style="margin-top:12px"></div>
+   <div id="nutritionGoalsForm" style="display:none;margin-top:14px">
+    <div class="formgrid">
+     <div class="field"><label>Objetivo</label><select id="nutritionGoal"><option value="bulk">Volumen</option><option value="cut">Definición</option><option value="maintenance">Mantenimiento</option></select></div>
+     <div class="field"><label>Calorías (kcal)</label><input id="nutritionKcal" type="number" min="0" step="50" placeholder="Ej. 2500"></div>
+     <div class="field"><label>Proteínas (g)</label><input id="nutritionProtein" type="number" min="0" step="5" placeholder="Ej. 160"></div>
+     <div class="field"><label>Hidratos (g)</label><input id="nutritionCarbs" type="number" min="0" step="5" placeholder="Ej. 280"></div>
+     <div class="field"><label>Grasas (g)</label><input id="nutritionFat" type="number" min="0" step="5" placeholder="Ej. 70"></div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" onclick="toggleNutritionGoals(false)">Cancelar</button><button class="btn" onclick="saveNutritionGoals()">Guardar objetivos</button></div>
+   </div>
+  </div>
+  <div class="card full">
+   <div class="row"><div><h3>Resumen del día</h3><div class="hint">Elige una fecha para consultar o registrar tus comidas.</div></div><div class="field" style="min-width:160px"><label>Fecha</label><input type="date" id="nutritionDate" onchange="renderNutrition()"></div></div>
+   <div id="nutritionSummary" class="grid" style="margin-top:12px"></div>
+  </div>
+  <div class="card full">
+   <h3>Añadir alimento</h3>
+   <div class="formgrid">
+    <div class="field"><label>Comida</label><select id="foodMeal"><option>Desayuno</option><option>Media mañana</option><option>Comida</option><option>Merienda</option><option>Cena</option><option>Otros</option></select></div>
+    <div class="field"><label>Alimento</label><input id="foodName" placeholder="Ej. Pechuga de pollo"></div>
+    <div class="field"><label>Cantidad (g)</label><input id="foodGrams" type="number" min="1" value="100"></div>
+    <div class="field"><label>Calorías por 100 g</label><input id="foodKcal" type="number" min="0" step="0.1" placeholder="kcal"></div>
+    <div class="field"><label>Proteínas por 100 g</label><input id="foodProtein" type="number" min="0" step="0.1" placeholder="g"></div>
+    <div class="field"><label>Hidratos por 100 g</label><input id="foodCarbs" type="number" min="0" step="0.1" placeholder="g"></div>
+    <div class="field"><label>Grasas por 100 g</label><input id="foodFat" type="number" min="0" step="0.1" placeholder="g"></div>
+   </div>
+   <div class="row" style="flex-wrap:wrap;margin-top:14px"><button class="btn" onclick="addManualFood()">＋ Añadir al diario</button><span class="hint">Introduce los valores de la etiqueta nutricional por cada 100 g.</span></div>
+  </div>
+  <div class="card full">
+   <h3>Escáner de código de barras</h3>
+   <div class="formgrid">
+    <div class="field"><label>Código EAN / UPC</label><input id="foodBarcode" inputmode="numeric" placeholder="Escanea o escribe el código"></div>
+    <div class="row" style="align-items:end;flex-wrap:wrap"><button class="btn secondary" onclick="lookupBarcode()">Buscar producto</button><button class="btn ghost" onclick="startBarcodeCamera()">Usar cámara</button></div>
+   </div>
+   <div id="barcodeCamera" style="display:none;margin-top:12px"><video id="barcodeVideo" playsinline style="width:100%;max-width:420px;border-radius:12px;background:#000"></video><div class="row" style="margin-top:8px"><span class="hint" id="barcodeCameraStatus">Preparando cámara…</span><button class="btn danger small" onclick="stopBarcodeCamera()">Cerrar cámara</button></div></div>
+   <div id="barcodeResult" class="hint" style="margin-top:10px">La búsqueda consulta Open Food Facts. Comprueba siempre que los datos coinciden con el envase.</div>
+  </div>
+  <div class="card full"><h3>Diario de comidas</h3><div id="nutritionDiary"></div></div>
+ </div>
+</section>
 <section id="history" class="view">
  <div class="heading"><div><div class="eyebrow">REGISTRO</div><h1>Historial</h1><div class="muted">Todas tus sesiones guardadas.</div></div></div>
  <div class="card" id="historyList"></div>
@@ -312,7 +358,7 @@ function confirmCatalogExercise(name,muscle){
 }
 
 function toast(t){let el=document.getElementById('toast');el.textContent=t;el.style.display='block';setTimeout(()=>el.style.display='none',2200)}
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='train')setupTraining();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();window.scrollTo(0,0)}
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='train')setupTraining();if(id==='nutrition'&&typeof renderNutrition==='function')renderNutrition();if(id==='progress')setupProgress();if(id==='history')renderHistory();if(id==='library')renderLibrary();if(id==='calendar')renderCalendar();if(id==='records')renderRecords();window.scrollTo(0,0)}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modalback').style.display='flex'}
 function closeModal(){document.getElementById('modalback').style.display='none'}
@@ -432,5 +478,6 @@ if(LOCAL_DEMO_MODE){
  })();
 }
 </script>
+<script src="nutrition.js"></script>
 </body>
 </html>
