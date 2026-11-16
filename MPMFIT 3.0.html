@@ -556,12 +556,39 @@ input,textarea,[contenteditable="true"],.selectable-text{-webkit-user-select:tex
  .logo svg{width:29px;height:29px}
 }
 
+
+/* MPMFIT — polished mobile identity and native-control styling */
+.logo{width:54px;height:46px;flex:0 0 54px;border:0;background:transparent;box-shadow:none;border-radius:0;padding:0;display:flex;align-items:center;justify-content:center}
+.logo svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 9px rgba(155,230,107,.16))}
+.brand{gap:12px}.brand strong{font-size:clamp(21px,4vw,26px);letter-spacing:1.1px;font-weight:900}.brand small{font-size:10px;letter-spacing:1.8px}
+input[type="file"]{width:100%;min-width:0;min-height:54px;padding:8px 10px;border:1px dashed #465a48;border-radius:14px;background:linear-gradient(145deg,#151e17,#101612);color:#aebcaf;font-size:13px}
+input[type="file"]::file-selector-button{appearance:none;border:1px solid rgba(155,230,107,.35);border-radius:10px;padding:10px 14px;margin-right:12px;background:#203020;color:#c2f79a;font:700 13px Inter,system-ui,sans-serif;cursor:pointer}
+input[type="file"]::-webkit-file-upload-button{border:1px solid rgba(155,230,107,.35);border-radius:10px;padding:10px 14px;margin-right:12px;background:#203020;color:#c2f79a;font:700 13px Inter,system-ui,sans-serif}
+input[type="date"],select{appearance:none;-webkit-appearance:none;background-color:#101611;border:1px solid #354438;border-radius:13px;color:var(--text);min-height:49px;padding:12px 42px 12px 14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239be66b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:.9;filter:invert(83%) sepia(43%) saturate(610%) hue-rotate(47deg);cursor:pointer}
+option{background:#151d17;color:#f0f5f0}
+.progress-photo-gallery:empty{display:none}
+#progressPhotoGallery:not(:empty){padding-top:4px}
+#progressPhotoFile{display:block}
+@media(max-width:760px){
+  .app{padding-top:calc(12px + env(safe-area-inset-top))}
+  .top{top:0;padding-top:calc(9px + env(safe-area-inset-top));min-height:calc(64px + env(safe-area-inset-top))}
+  .logo{width:48px;height:42px;flex-basis:48px}
+  .brand{gap:10px}
+  .brand small{font-size:8px;letter-spacing:1.35px}
+  input[type="date"],select{min-height:50px}
+  input[type="file"]{min-height:58px}
+  .photo-upload-row{gap:12px}
+  .photo-upload-row .field{min-width:0}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
- <div class="brand"><div class="logo" aria-label="MPMFIT"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 17v14M13 12v24M35 12v24M40 17v14M13 24h22" fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 19.5 24 14l6 5.5v9L24 34l-6-5.5z" fill="currentColor" opacity=".95"/></svg></div><div><strong>MPMFIT</strong><small>TRAINING · NUTRITION · PROGRESS</small></div></div>
+ <div class="brand"><div class="logo" aria-label="MPMFIT"><svg viewBox="0 0 100 72" role="img" aria-hidden="true"><defs><linearGradient id="mpmMark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c4ff91"/><stop offset="1" stop-color="#76d83f"/></linearGradient></defs><path d="M5 62V10l27 19 18 14 17-16L91 3v30L65 59 49 71 32 57 20 49v13z" fill="url(#mpmMark)"/><path d="M49 43 68 25h16L49 61 29 46V31z" fill="#0b0e0c" opacity=".92"/><path d="M68 25 91 3v30L79 22z" fill="url(#mpmMark)"/></svg></div><div><strong>MPMFIT</strong><small>TRAINING · NUTRITION · PROGRESS</small></div></div>
  <div class="topright"><span class="pill" id="syncStatus">● SIN CONECTAR</span></div>
 </header>
 <nav class="nav" aria-label="Navegación principal">
