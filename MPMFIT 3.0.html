@@ -611,7 +611,7 @@ input,textarea,[contenteditable="true"],.selectable-text{-webkit-user-select:tex
   <div class="card home-stat"><div class="home-stat-top"><span>Entrenamientos</span><span class="home-stat-icon">↗</span></div><b id="statSessions">0</b><small>Sesiones registradas</small></div>
   <div class="card home-stat"><div class="home-stat-top"><span>Rutinas</span><span class="home-stat-icon">▤</span></div><b id="statRoutines">0</b><small>Planes guardados</small></div>
   <div class="card home-stat"><div class="home-stat-top"><span>Ejercicios</span><span class="home-stat-icon">◈</span></div><b id="statExercises">0</b><small>En tus rutinas</small></div>
-  <div class="card home-stat"><div class="home-stat-top"><span>Volumen total</span><span class="home-stat-icon">⌁</span></div><b id="statVolume">0</b><small>kg × repeticiones</small></div>
+  <div class="card home-stat"><div class="home-stat-top"><span>Volumen total</span><span class="home-stat-icon">⌁</span></div><b id="statVolume">0</b><small>${getMPMFITPreference('mass')} × repeticiones</small></div>
  </div>
  <div class="home-dashboard">
   <div class="card home-panel home-week-panel">
@@ -1144,8 +1144,8 @@ function setupProgress(){let names=[...new Set(db.sessions.flatMap(s=>s.exercise
 function renderProgress(){
  let name=document.getElementById('progressExercise').value,box=document.getElementById('progressContent');
  const weekly=weeklyVolumeData();
- const chart=weekly.length?`<div style="margin:22px 0 28px"><h3>Volumen semanal</h3><div class="muted">Kilogramos × repeticiones registrados por semana</div><div class="chartbars">${weekly.map(w=>`<div class="chartcol"><div class="chartbar" title="${Math.round(w.volume).toLocaleString('es-ES')} kg" style="height:${Math.max(3,w.volume/Math.max(...weekly.map(x=>x.volume),1)*100)}%"></div><small>${esc(w.label)}</small></div>`).join('')}</div></div>`:'';
-if(!name){box.innerHTML=chart+'<div class="empty">Registra entrenamientos para empezar a ver tu evolución.</div>';return}let data=[];db.sessions.slice().reverse().forEach(s=>s.exercises.filter(e=>e.name===name).forEach(e=>{let max=Math.max(0,...e.sets.map(x=>Number(x.weight)||0));if(max)data.push({date:s.date,max})}));if(!data.length){box.innerHTML=chart+'<div class="empty">Todavía no hay pesos registrados para este ejercicio.</div>';return}let maxAll=Math.max(...data.map(x=>x.max));box.innerHTML=chart+`<div class="biggreen">${maxAll} kg</div><div class="muted">Mayor peso registrado · ${esc(name)}</div><div style="margin-top:20px">${data.map(d=>`<div style="margin:13px 0"><div class="row"><span>${new Date(d.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'})}</span><strong>${d.max} kg</strong></div><div class="barwrap"><div class="bar" style="width:${Math.max(3,d.max/maxAll*100)}%"></div></div></div>`).join('')}</div>`}
+ const chart=weekly.length?`<div style="margin:22px 0 28px"><h3>Volumen semanal</h3><div class="muted">Kilogramos × repeticiones registrados por semana</div><div class="chartbars">${weekly.map(w=>`<div class="chartcol"><div class="chartbar" title="${Math.round(w.volume*(getMPMFITPreference('mass')==='lb'?2.2046226218:1)).toLocaleString('es-ES')} ${getMPMFITPreference('mass')}" style="height:${Math.max(3,w.volume/Math.max(...weekly.map(x=>x.volume),1)*100)}%"></div><small>${esc(w.label)}</small></div>`).join('')}</div></div>`:'';
+if(!name){box.innerHTML=chart+'<div class="empty">Registra entrenamientos para empezar a ver tu evolución.</div>';return}let data=[];db.sessions.slice().reverse().forEach(s=>s.exercises.filter(e=>e.name===name).forEach(e=>{let max=Math.max(0,...e.sets.map(x=>Number(x.weight)||0));if(max)data.push({date:s.date,max})}));if(!data.length){box.innerHTML=chart+'<div class="empty">Todavía no hay pesos registrados para este ejercicio.</div>';return}let maxAll=Math.max(...data.map(x=>x.max));box.innerHTML=chart+`<div class="biggreen">${formatAppMass(maxAll,1)}</div><div class="muted">Mayor peso registrado · ${esc(name)}</div><div style="margin-top:20px">${data.map(d=>`<div style="margin:13px 0"><div class="row"><span>${new Date(d.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'short'})}</span><strong>${formatAppMass(d.max,1)}</strong></div><div class="barwrap"><div class="bar" style="width:${Math.max(3,d.max/maxAll*100)}%"></div></div></div>`).join('')}</div>`}
 function weeklyVolumeData(){
  const map={};
  db.sessions.forEach(s=>{
@@ -1181,7 +1181,7 @@ function renderRecords(){
   const w=Number(set.weight)||0;if(w>0&&(!best[e.name]||w>best[e.name].weight))best[e.name]={weight:w,reps:set.reps||'—',date:s.date};
  })));
  const items=Object.entries(best).sort((a,b)=>a[0].localeCompare(b[0]));
- document.getElementById('recordsList').innerHTML=items.length?items.map(([name,v])=>`<div class="pr-item"><div><strong>${esc(name)}</strong><div class="hint">${new Date(v.date+'T12:00:00').toLocaleDateString('es-ES')} · ${esc(v.reps)} reps</div></div><div class="pr-value">${v.weight} kg</div></div>`).join(''):'<div class="empty">Aún no hay récords. Guarda entrenamientos con pesos para que aparezcan aquí.</div>';
+ document.getElementById('recordsList').innerHTML=items.length?items.map(([name,v])=>`<div class="pr-item"><div><strong>${esc(name)}</strong><div class="hint">${new Date(v.date+'T12:00:00').toLocaleDateString('es-ES')} · ${esc(v.reps)} reps</div></div><div class="pr-value">${formatAppMass(v.weight,1)}</div></div>`).join(''):'<div class="empty">Aún no hay récords. Guarda entrenamientos con pesos para que aparezcan aquí.</div>';
 }
 function homeDateKey(date){
  const d=new Date(date.getTime()-date.getTimezoneOffset()*60000);
@@ -1195,7 +1195,7 @@ function renderHome(){
  document.getElementById('statRoutines').textContent=db.routines.length;
  document.getElementById('statSessions').textContent=db.sessions.length;
  document.getElementById('statExercises').textContent=db.routines.reduce((a,r)=>a+r.exercises.length,0);
- document.getElementById('statVolume').textContent=Math.round(totalVolume()).toLocaleString('es-ES');
+ document.getElementById('statVolume').textContent=Math.round(totalVolume()*(getMPMFITPreference('mass')==='lb'?2.2046226218:1)).toLocaleString('es-ES');
  const hr=document.getElementById('homeRoutines');
  hr.innerHTML=db.routines.length?db.routines.slice(0,4).map(r=>'<div class="home-routine-row"><div class="home-routine-mark">M</div><div class="home-routine-info"><strong>'+esc(r.name)+'</strong><small>'+r.exercises.length+' ejercicios'+(r.desc?' · '+esc(r.desc):'')+'</small></div><button class="btn home-routine-action" onclick="startRoutine(\''+r.id+'\')">Entrenar <span>→</span></button></div>').join(''):'<div class="home-nutrition-empty">Todavía no has creado ninguna rutina. Organiza tu semana empezando por una división de entrenamiento.</div>';
  const last=db.sessions[0],lastBox=document.getElementById('lastSession');
