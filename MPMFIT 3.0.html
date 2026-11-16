@@ -872,19 +872,25 @@ Object.assign(MPMFIT_TEXT_I18N.en,{
 Object.assign(MPMFIT_TEXT_I18N.ca,{
 'Quitar':'Treure','Serie':'Sèrie','Reps':'Reps','Añadir serie':'Afegir sèrie','Guardar':'Desar','Eliminar':'Eliminar','Editar':'Editar','Buscar':'Cercar','Todos':'Tots','Sin registros':'Sense registres','Sin registros anteriores':'Sense registres anteriors','Último peso':'Últim pes','Cambio desde la medición anterior':'Canvi des de l’últim mesurament','Primer registro':'Primer registre','Registros recientes':'Registres recents','Historial de medidas':'Historial de mesures','Medidas guardadas':'Mesures desades','Medidas guardadas.':'Mesures desades.','Selecciona una fecha':'Selecciona una data','Introduce al menos una medida':'Introdueix almenys una mesura','Medición eliminada':'Mesura eliminada','Peso guardado':'Pes desat','Objetivo guardado':'Objectiu desat','Objetivo eliminado':'Objectiu eliminat','Objetivo alcanzado':'Objectiu assolit','Sin objetivo establecido.':'No hi ha cap objectiu establert.','Faltan':'Falten','Diferencia:':'Diferència:','Última medición:':'Últim mesurament:','Última vez:':'Última vegada:','Sin registros anteriores de este ejercicio':'No hi ha registres anteriors d’aquest exercici','Aún no hay récords. Guarda entrenamientos con pesos para que aparezcan aquí.':'Encara no hi ha rècords. Desa entrenaments amb pesos perquè apareguin aquí.','Volumen semanal':'Volum setmanal','Registra entrenamientos para empezar a ver tu evolución.':'Registra entrenaments per començar a veure la teva evolució.','Todavía no hay pesos registrados para este ejercicio.':'Encara no hi ha pesos registrats per a aquest exercici.','Mayor peso registrado':'Pes màxim registrat','Guardar peso':'Desar pes','Guardar medidas':'Desar mesures','Cámara no disponible':'Càmera no disponible','Preparando cámara…':'Preparant la càmera…','No se ha podido sincronizar; queda guardado en este dispositivo.':'No s’ha pogut sincronitzar; s’ha desat en aquest dispositiu.','Preferencias sincronizadas con tu cuenta.':'Preferències sincronitzades amb el teu compte.'
 });
+function translateMPMFITValue(value){
+ const lang=getMPMFITPreference('language'),dict=MPMFIT_TEXT_I18N[lang]||{};
+ const reverse={};Object.entries(MPMFIT_TEXT_I18N).forEach(([sourceLang,entries])=>{if(sourceLang!=='es')Object.entries(entries).forEach(([es,translated])=>{if(translated&&!reverse[translated])reverse[translated]=es})});
+ const canonical=reverse[value]||value;return lang==='es'?canonical:(dict[canonical]||canonical);
+}
 function translateMPMFITText(root=document.body){
- const lang=getMPMFITPreference('language'),dict=MPMFIT_TEXT_I18N[lang];if(!dict||!root)return;
- const reverse={};Object.entries(MPMFIT_TEXT_I18N).forEach(([sourceLang,entries])=>{if(sourceLang!=='es')Object.entries(entries).forEach(([es,value])=>{if(value&&!reverse[value])reverse[value]=es})});
- const translate=value=>{const canonical=reverse[value]||value;return dict[canonical]||canonical};
+ if(!root)return;
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;
- while((node=walker.nextNode())){const raw=node.nodeValue,trim=raw.trim(),translated=translate(trim);if(translated!==trim)node.nodeValue=raw.replace(trim,translated)}
- root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(el=>['placeholder','aria-label','title'].forEach(attr=>{const v=el.getAttribute(attr);if(v){const translated=translate(v);if(translated!==v)el.setAttribute(attr,translated)}}));
+ while((node=walker.nextNode())){const raw=node.nodeValue,trim=raw.trim(),translated=translateMPMFITValue(trim);if(translated!==trim)node.nodeValue=raw.replace(trim,translated)}
+ root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(el=>['placeholder','aria-label','title'].forEach(attr=>{const v=el.getAttribute(attr);if(v){const translated=translateMPMFITValue(v);if(translated!==v)el.setAttribute(attr,translated)}}));
 }
 function applyMPMFITLanguage(){
  const lang=getMPMFITPreference('language'),dict=MPMFIT_I18N[lang]||MPMFIT_I18N.es;document.documentElement.lang=lang;
- document.querySelectorAll('[data-i18n]').forEach(el=>{if(dict[el.dataset.i18n])el.textContent=dict[el.dataset.i18n]});
+ document.querySelectorAll('[data-i18n]').forEach(el=>{const key=el.dataset.i18n;if(dict[key])el.textContent=dict[key]});
  translateMPMFITText();
- if(!window.mpmfitTranslationObserver&&document.body){window.mpmfitTranslationObserver=new MutationObserver(records=>records.forEach(record=>{if(record.type==='childList')record.addedNodes.forEach(node=>{if(node.nodeType===Node.TEXT_NODE){const lang=getMPMFITPreference('language'),d=MPMFIT_TEXT_I18N[lang];if(d&&d[node.nodeValue.trim()])node.nodeValue=d[node.nodeValue.trim()]}else if(node.nodeType===Node.ELEMENT_NODE)translateMPMFITText(node)}else if(record.type==='characterData'){const lang=getMPMFITPreference('language'),d=MPMFIT_TEXT_I18N[lang],v=record.target.nodeValue.trim();if(d&&d[v])record.target.nodeValue=d[v]}}));window.mpmfitTranslationObserver.observe(document.body,{subtree:true,childList:true,characterData:true})}
+ if(!window.mpmfitTranslationObserver&&document.body){window.mpmfitTranslationObserver=new MutationObserver(records=>records.forEach(record=>{
+  if(record.type==='childList')record.addedNodes.forEach(node=>{if(node.nodeType===Node.TEXT_NODE){const v=node.nodeValue.trim(),t=translateMPMFITValue(v);if(t!==v)node.nodeValue=node.nodeValue.replace(v,t)}else if(node.nodeType===Node.ELEMENT_NODE)translateMPMFITText(node)});
+  else if(record.type==='characterData'){const v=record.target.nodeValue.trim(),t=translateMPMFITValue(v);if(t!==v)record.target.nodeValue=record.target.nodeValue.replace(v,t)}
+ }));window.mpmfitTranslationObserver.observe(document.body,{subtree:true,childList:true,characterData:true})}
 }
 async function loadMPMFITPreferences(){
  mpmfitPreferences={...MPMFIT_PREF_DEFAULTS};
