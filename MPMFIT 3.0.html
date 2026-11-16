@@ -868,9 +868,11 @@ ca:{
 }};
 function translateMPMFITText(root=document.body){
  const lang=getMPMFITPreference('language'),dict=MPMFIT_TEXT_I18N[lang];if(!dict||!root)return;
+ const reverse={};Object.entries(MPMFIT_TEXT_I18N).forEach(([sourceLang,entries])=>{if(sourceLang!=='es')Object.entries(entries).forEach(([es,value])=>{if(value&&!reverse[value])reverse[value]=es})});
+ const translate=value=>{const canonical=reverse[value]||value;return dict[canonical]||canonical};
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;
- while((node=walker.nextNode())){const raw=node.nodeValue,trim=raw.trim();if(dict[trim])node.nodeValue=raw.replace(trim,dict[trim])}
- root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(el=>['placeholder','aria-label','title'].forEach(attr=>{const v=el.getAttribute(attr);if(v&&dict[v])el.setAttribute(attr,dict[v])}));
+ while((node=walker.nextNode())){const raw=node.nodeValue,trim=raw.trim(),translated=translate(trim);if(translated!==trim)node.nodeValue=raw.replace(trim,translated)}
+ root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(el=>['placeholder','aria-label','title'].forEach(attr=>{const v=el.getAttribute(attr);if(v){const translated=translate(v);if(translated!==v)el.setAttribute(attr,translated)}}));
 }
 function applyMPMFITLanguage(){
  const lang=getMPMFITPreference('language'),dict=MPMFIT_I18N[lang]||MPMFIT_I18N.es;document.documentElement.lang=lang;
