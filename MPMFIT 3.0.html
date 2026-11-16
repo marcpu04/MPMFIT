@@ -611,7 +611,7 @@ input,textarea,[contenteditable="true"],.selectable-text{-webkit-user-select:tex
   <div class="card home-stat"><div class="home-stat-top"><span>Entrenamientos</span><span class="home-stat-icon">↗</span></div><b id="statSessions">0</b><small>Sesiones registradas</small></div>
   <div class="card home-stat"><div class="home-stat-top"><span>Rutinas</span><span class="home-stat-icon">▤</span></div><b id="statRoutines">0</b><small>Planes guardados</small></div>
   <div class="card home-stat"><div class="home-stat-top"><span>Ejercicios</span><span class="home-stat-icon">◈</span></div><b id="statExercises">0</b><small>En tus rutinas</small></div>
-  <div class="card home-stat"><div class="home-stat-top"><span>Volumen total</span><span class="home-stat-icon">⌁</span></div><b id="statVolume">0</b><small>${getMPMFITPreference('mass')} × repeticiones</small></div>
+  <div class="card home-stat"><div class="home-stat-top"><span>Volumen total</span><span class="home-stat-icon">⌁</span></div><b id="statVolume">0</b><small id="statVolumeUnit">kg × repeticiones</small></div>
  </div>
  <div class="home-dashboard">
   <div class="card home-panel home-week-panel">
@@ -1195,7 +1195,7 @@ function renderHome(){
  document.getElementById('statRoutines').textContent=db.routines.length;
  document.getElementById('statSessions').textContent=db.sessions.length;
  document.getElementById('statExercises').textContent=db.routines.reduce((a,r)=>a+r.exercises.length,0);
- document.getElementById('statVolume').textContent=Math.round(totalVolume()*(getMPMFITPreference('mass')==='lb'?2.2046226218:1)).toLocaleString('es-ES');
+ document.getElementById('statVolume').textContent=Math.round(totalVolume()*(getMPMFITPreference('mass')==='lb'?2.2046226218:1)).toLocaleString('es-ES');const volumeUnit=document.getElementById('statVolumeUnit');if(volumeUnit)volumeUnit.textContent=getMPMFITPreference('mass')+' × repeticiones';
  const hr=document.getElementById('homeRoutines');
  hr.innerHTML=db.routines.length?db.routines.slice(0,4).map(r=>'<div class="home-routine-row"><div class="home-routine-mark">M</div><div class="home-routine-info"><strong>'+esc(r.name)+'</strong><small>'+r.exercises.length+' ejercicios'+(r.desc?' · '+esc(r.desc):'')+'</small></div><button class="btn home-routine-action" onclick="startRoutine(\''+r.id+'\')">Entrenar <span>→</span></button></div>').join(''):'<div class="home-nutrition-empty">Todavía no has creado ninguna rutina. Organiza tu semana empezando por una división de entrenamiento.</div>';
  const last=db.sessions[0],lastBox=document.getElementById('lastSession');
