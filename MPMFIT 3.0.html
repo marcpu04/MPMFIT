@@ -610,6 +610,13 @@ option{background:#151d17;color:#f0f5f0}
 .mpm-picker-confirm{border:0;background:linear-gradient(110deg,#b7ff83,#8bdc54);color:#10170d}
 @media(min-width:761px){.mpm-picker-backdrop{align-items:center}.mpm-picker{border-radius:22px}}
 
+
+.mpm-upload{display:flex;align-items:center;gap:12px;min-height:68px;padding:12px 14px;border:1px dashed #50674f;border-radius:15px;background:linear-gradient(135deg,rgba(155,230,107,.09),rgba(16,23,18,.9));cursor:pointer}
+.mpm-upload-icon{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:rgba(155,230,107,.14);color:var(--green);font-size:27px;font-weight:400}
+.mpm-upload-copy{display:grid;gap:3px;min-width:0}.mpm-upload-copy strong{font-size:13px;color:#eaf3e8;overflow-wrap:anywhere}.mpm-upload-copy small{font-size:11px;color:var(--muted)}
+.mpm-upload-arrow{margin-left:auto;color:var(--green);font-size:18px}
+.mpm-file-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+
 </style>
 </head>
 <body>
@@ -806,7 +813,7 @@ option{background:#151d17;color:#f0f5f0}
   <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" onclick="saveBodyMeasurements()">＋ Guardar medidas</button></div>
   <div id="bodyMeasureSummary" style="margin-top:16px"></div><div class="field" style="max-width:260px;margin-top:18px"><label>Ver evolución de</label><select id="bodyMeasureMetric" onchange="renderBodyMeasurements()"><option value="waist">Cintura</option><option value="chest">Pecho</option><option value="arm">Brazo</option><option value="thigh">Muslo</option><option value="bodyFat">Grasa corporal</option></select></div><div id="bodyMeasureChart" style="margin-top:10px"></div><div id="bodyMeasureHistory" style="margin-top:12px"></div>
  </div>
-<div class="card full" style="margin-top:16px"><div><h2>Fotos de progreso</h2><div class="hint">Compara tu evolución visual con fotos tomadas en condiciones parecidas. Las imágenes se guardan solo en este navegador y dispositivo; no se sincronizan con tu cuenta.</div></div><div class="photo-upload-row" style="margin-top:14px"><div class="field"><label>Fecha de la foto</label><input type="date" id="progressPhotoDate"></div><div class="field"><label>Imagen</label><input type="file" id="progressPhotoFile" accept="image/*"></div><button class="btn" onclick="saveProgressPhoto()">＋ Guardar foto</button></div><div id="progressPhotoGallery" class="progress-photo-gallery" style="margin-top:16px"></div></div></section>
+<div class="card full" style="margin-top:16px"><div><h2>Fotos de progreso</h2><div class="hint">Compara tu evolución visual con fotos tomadas en condiciones parecidas. Las imágenes se guardan solo en este navegador y dispositivo; no se sincronizan con tu cuenta.</div></div><div class="photo-upload-row" style="margin-top:14px"><div class="field"><label>Fecha de la foto</label><input type="date" id="progressPhotoDate"></div><div class="field"><label>Imagen</label><label class="mpm-upload" for="progressPhotoFile"><span class="mpm-upload-icon" aria-hidden="true">＋</span><span class="mpm-upload-copy"><strong id="progressPhotoFileName">Seleccionar una imagen</strong><small>JPG o PNG · Elige una foto de tu galería</small></span><span class="mpm-upload-arrow" aria-hidden="true">↗</span></label><input type="file" id="progressPhotoFile" accept="image/*" class="mpm-file-hidden"></div><button class="btn" onclick="saveProgressPhoto()">＋ Guardar foto</button></div><div id="progressPhotoGallery" class="progress-photo-gallery" style="margin-top:16px"></div></div></section>
 <section id="library" class="view">
  <div class="heading"><div><div class="eyebrow">BIBLIOTECA</div><h1>Ejercicios</h1><div class="muted">Busca movimientos por nombre o grupo muscular.</div></div></div>
  <div class="card">
@@ -1445,6 +1452,9 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
  },true);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay)close();});
 })();
+</script>
+<script>
+(()=>{const input=document.getElementById('progressPhotoFile');if(!input)return;input.addEventListener('change',()=>{const label=document.getElementById('progressPhotoFileName');if(label)label.textContent=input.files&&input.files[0]?input.files[0].name:'Seleccionar una imagen';});})();
 </script>
 </body>
 </html>
