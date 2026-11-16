@@ -542,7 +542,7 @@ function bodyWeightGoalKey(){return 'mpmfit_bodyweight_goal_v1_'+(currentUser?.i
 function renderBodyWeightGoal(){
  const input=document.getElementById('bodyWeightGoal'),box=document.getElementById('bodyWeightGoalSummary');if(!input||!box)return;
  const raw=localStorage.getItem(bodyWeightGoalKey()),goal=raw===null?NaN:Number(raw),entries=getBodyWeightEntries().sort((a,b)=>a.date.localeCompare(b.date));
- if(Number.isFinite(goal)&&goal>=20&&goal<=400){input.value=goal;if(entries.length){const current=Number(entries[entries.length-1].weight),remaining=goal-current;box.textContent='Último peso: '+current.toFixed(1)+' kg · Objetivo: '+goal.toFixed(1)+' kg · '+(Math.abs(remaining)<.05?'Objetivo alcanzado':(remaining>0?'Faltan ':'Diferencia: ')+Math.abs(remaining).toFixed(1)+' kg')}else box.textContent='Objetivo guardado. Registra tu peso para ver cuánto falta.'}
+ if(Number.isFinite(goal)&&goal>=20&&goal<=400){const massUnit=typeof getMPMFITPreference==='function'?getMPMFITPreference('mass'):'kg',display=v=>(massUnit==='lb'?v*2.2046226218:v).toFixed(1);input.value=display(goal);if(entries.length){const current=Number(entries[entries.length-1].weight),remaining=goal-current;box.textContent='Último peso: '+display(current)+' '+massUnit+' · Objetivo: '+display(goal)+' '+massUnit+' · '+(Math.abs(remaining)<.05?'Objetivo alcanzado':(remaining>0?'Faltan ':'Diferencia: ')+display(Math.abs(remaining))+' '+massUnit)}else box.textContent='Objetivo guardado. Registra tu peso para ver cuánto falta.'}
  else{input.value='';box.textContent='Sin objetivo establecido.'}
 }
 function saveBodyWeightGoal(){
