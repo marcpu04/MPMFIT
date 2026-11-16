@@ -13,14 +13,14 @@ const foreground = [
   '    android:viewportWidth="512" android:viewportHeight="512">',
   '    <path android:fillColor="#9BE66B" android:pathData="M116,354V158h63l77,111 77,-111h63v196h-65V254l-75,103 -75,-103v100z"/>',
   '</vector>'
-].join('\\n') + '\\n';
+].join('\n') + '\n';
 const adaptive = [
   '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">',
   '    <background android:drawable="@color/ic_launcher_background"/>',
   '    <foreground android:drawable="@drawable/ic_launcher_foreground"/>',
   '</adaptive-icon>'
-].join('\\n') + '\\n';
-const background = '<resources>\\n    <color name="ic_launcher_background">#0B0E0C</color>\\n</resources>\\n';
+].join('\n') + '\n';
+const background = '<resources>\n    <color name="ic_launcher_background">#0B0E0C</color>\n</resources>\n';
 
 function write(relative, content) {
   const target = path.join(res, relative);
