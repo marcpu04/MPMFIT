@@ -11,9 +11,10 @@ const foreground = [
   '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
   '    android:width="108dp" android:height="108dp"',
   '    android:viewportWidth="512" android:viewportHeight="512">',
-  '    <path android:fillColor="#9BE66B" android:pathData="M116,354V158h63l77,111 77,-111h63v196h-65V254l-75,103 -75,-103v100z"/>',
+  '    <path android:fillColor="#9BE66B" android:pathData="M104,365V147l102,76 51,39 49,-47 102,-87v91l-99,84 -52,40 -54,-40 -30,-23v85z"/>',
+  '    <path android:fillColor="#0B0E0C" android:pathData="m255,262 102,-96h54L255,316l-78,-59v-67z"/>',
   '</vector>'
-].join('\n') + '\n';
+].join('\\n') + '\\n';
 const adaptive = [
   '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">',
   '    <background android:drawable="@color/ic_launcher_background"/>',
