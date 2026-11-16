@@ -888,19 +888,7 @@ Object.assign(MPMFIT_TEXT_I18N.ca,{"Press banca con barra":"Press de banca amb b
 function replaceMPMFITPhrase(text,phrase,replacement){
  if(!phrase)return text;
  if(/^[A-Za-zÀ-ÿ0-9_]+$/.test(phrase)){
-  const escaped=phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\function translateMPMFITValue(value){
- const lang=getMPMFITPreference('language'),dict=MPMFIT_TEXT_I18N[lang]||{};
- let result=String(value??'');
- const reverse=[];Object.entries(MPMFIT_TEXT_I18N).forEach(([sourceLang,entries])=>{if(sourceLang!=='es')Object.entries(entries).forEach(([es,translated])=>{if(translated)reverse.push([translated,es])})});
- reverse.sort((a,b)=>b[0].length-a[0].length);
- reverse.forEach(([translated,es])=>{if(result.includes(translated))result=result.split(translated).join(es)});
- if(lang!=='es'){
-  const forward=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length);
-  forward.forEach(([es,translated])=>{if(es&&result.includes(es))result=result.split(es).join(translated)});
- }
- return result;
-}');
-  return text.replace(new RegExp('(^|[^A-Za-zÀ-ÿ0-9_])'+escaped+'(?=$|[^A-Za-zÀ-ÿ0-9_])','g'),(_,prefix)=>prefix+replacement);
+  return text.replace(new RegExp('(^|[^A-Za-zÀ-ÿ0-9_])'+phrase+'(?=$|[^A-Za-zÀ-ÿ0-9_])','g'),(_,prefix)=>prefix+replacement);
  }
  return text.split(phrase).join(replacement);
 }
