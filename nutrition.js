@@ -486,7 +486,18 @@ function getBodyWeightEntries(){
  try{const data=JSON.parse(localStorage.getItem(bodyWeightStorageKey())||'[]');return Array.isArray(data)?data.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)&&Number.isFinite(Number(x.weight))):[]}
  catch(e){return []}
 }
+function syncProgressUnitInputs(){
+ const mass=typeof getMPMFITPreference==='function'?getMPMFITPreference('mass'):'kg',length=typeof getMPMFITPreference==='function'?getMPMFITPreference('length'):'cm';
+ const weightLabel=document.querySelector('label[for="bodyWeightValue"]')||document.getElementById('bodyWeightValue')?.closest('.field')?.querySelector('label');
+ if(weightLabel)weightLabel.textContent='Tu peso ('+mass+')';
+ const goalLabel=document.querySelector('label[for="bodyWeightGoal"]')||document.getElementById('bodyWeightGoal')?.closest('.field')?.querySelector('label');
+ if(goalLabel)goalLabel.textContent='Objetivo de peso ('+mass+')';
+ ['bodyWeightValue','bodyWeightGoal'].forEach(id=>{const el=document.getElementById(id);if(el){el.min=mass==='lb'?(20*2.2046226218).toFixed(1):'20';el.max=mass==='lb'?(400*2.2046226218).toFixed(1):'400'}})
+ const measureLabels={measureWaist:'Cintura',measureChest:'Pecho',measureArm:'Brazo',measureThigh:'Muslo'};
+ Object.entries(measureLabels).forEach(([id,label])=>{const el=document.getElementById(id);if(el){const l=el.closest('.field')?.querySelector('label');if(l)l.textContent=label+' ('+length+')';el.min=length==='in'?(1/2.54).toFixed(2):'1';el.max=length==='in'?(300/2.54).toFixed(1):'300'}})
+}
 function renderBodyWeight(){
+ syncProgressUnitInputs();
  const dateInput=document.getElementById('bodyWeightDate'),valueInput=document.getElementById('bodyWeightValue');
  if(!dateInput||!valueInput)return;
  if(!dateInput.value){const now=new Date();dateInput.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
@@ -519,6 +530,7 @@ function deleteBodyWeight(id){
 function bodyMeasureStorageKey(){return 'mpmfit_bodymeasure_v1_'+(currentUser?.id||'guest')}
 function getBodyMeasureEntries(){try{const data=JSON.parse(localStorage.getItem(bodyMeasureStorageKey())||'[]');return Array.isArray(data)?data.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date)):[]}catch(e){return []}}
 function renderBodyMeasurements(){
+ syncProgressUnitInputs();
  const dateInput=document.getElementById('bodyMeasureDate'),summary=document.getElementById('bodyMeasureSummary'),history=document.getElementById('bodyMeasureHistory');if(!dateInput||!summary||!history)return;
  if(!dateInput.value){const now=new Date();dateInput.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')}
  const labels={waist:'Cintura',chest:'Pecho',arm:'Brazo',thigh:'Muslo'},entries=getBodyMeasureEntries().sort((a,b)=>a.date.localeCompare(b.date));
@@ -540,6 +552,7 @@ function deleteBodyMeasurements(id){const entries=getBodyMeasureEntries().filter
 // Objetivo de peso configurable por usuario.
 function bodyWeightGoalKey(){return 'mpmfit_bodyweight_goal_v1_'+(currentUser?.id||'guest')}
 function renderBodyWeightGoal(){
+ syncProgressUnitInputs();
  const input=document.getElementById('bodyWeightGoal'),box=document.getElementById('bodyWeightGoalSummary');if(!input||!box)return;
  const raw=localStorage.getItem(bodyWeightGoalKey()),goal=raw===null?NaN:Number(raw),entries=getBodyWeightEntries().sort((a,b)=>a.date.localeCompare(b.date));
  if(Number.isFinite(goal)&&goal>=20&&goal<=400){const massUnit=typeof getMPMFITPreference==='function'?getMPMFITPreference('mass'):'kg',display=v=>(massUnit==='lb'?v*2.2046226218:v).toFixed(1);input.value=display(goal);if(entries.length){const current=Number(entries[entries.length-1].weight),remaining=goal-current;box.textContent='Último peso: '+display(current)+' '+massUnit+' · Objetivo: '+display(goal)+' '+massUnit+' · '+(Math.abs(remaining)<.05?'Objetivo alcanzado':(remaining>0?'Faltan ':'Diferencia: ')+display(Math.abs(remaining))+' '+massUnit)}else box.textContent='Objetivo guardado. Registra tu peso para ver cuánto falta.'}
