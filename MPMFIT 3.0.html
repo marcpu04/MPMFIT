@@ -1454,6 +1454,12 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 })();
 </script>
 <script>
+
+if(typeof MPMFIT_TEXT_I18N!=='undefined'){
+ Object.assign(MPMFIT_TEXT_I18N.en,{"Seleccionar una imagen":"Choose an image","JPG o PNG · Elige una foto de tu galería":"JPG or PNG · Choose a photo from your gallery"});
+ Object.assign(MPMFIT_TEXT_I18N.ca,{"Seleccionar una imagen":"Selecciona una imatge","JPG o PNG · Elige una foto de tu galería":"JPG o PNG · Tria una foto de la galeria"});
+}
+
 (()=>{const input=document.getElementById('progressPhotoFile');if(!input)return;input.addEventListener('change',()=>{const label=document.getElementById('progressPhotoFileName');if(label)label.textContent=input.files&&input.files[0]?input.files[0].name:'Seleccionar una imagen';});})();
 </script>
 </body>
