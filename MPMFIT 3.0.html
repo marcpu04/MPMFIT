@@ -583,6 +583,33 @@ option{background:#151d17;color:#f0f5f0}
   .photo-upload-row .field{min-width:0}
 }
 
+
+/* Custom mobile pickers — avoid raw Android select/date popups */
+.mpm-picker-backdrop{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;padding:14px}
+.mpm-picker{width:min(520px,100%);max-height:min(78dvh,720px);overflow:auto;background:linear-gradient(155deg,#1b241d,#101612);border:1px solid #425344;border-radius:22px;padding:18px;box-shadow:0 24px 80px #000b;animation:mpmPickerIn .18s ease-out}
+@keyframes mpmPickerIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.mpm-picker-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.mpm-picker-title{font-size:18px;font-weight:850;letter-spacing:-.4px}
+.mpm-picker-close{width:38px;height:38px;border:1px solid #344338;border-radius:12px;background:#111813;color:#dce8dc;font-size:20px}
+.mpm-option-list{display:grid;gap:7px}
+.mpm-option{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:54px;text-align:left;padding:13px 14px;border:1px solid #2d3a30;border-radius:13px;background:#121a14;color:#e8f0e8;font-weight:650}
+.mpm-option.selected{border-color:var(--green);background:rgba(155,230,107,.12);color:var(--green)}
+.mpm-option-check{color:var(--green);font-size:18px}
+.mpm-calendar-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 14px}
+.mpm-calendar-nav button{width:42px;height:42px;border:1px solid #344338;border-radius:12px;background:#121a14;color:var(--green);font-size:22px}
+.mpm-calendar-month{font-size:16px;font-weight:800;text-transform:capitalize}
+.mpm-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.mpm-calendar-weekday{text-align:center;color:#91a091;font-size:11px;font-weight:750;padding:7px 0}
+.mpm-calendar-day{aspect-ratio:1;border:1px solid transparent;border-radius:13px;background:#141d16;color:#eaf2e8;font-weight:650}
+.mpm-calendar-day:disabled{opacity:.22}
+.mpm-calendar-day.today{border-color:#60795d}
+.mpm-calendar-day.selected{background:var(--green);color:#10170d;box-shadow:0 4px 15px rgba(155,230,107,.2)}
+.mpm-picker-actions{display:flex;gap:9px;margin-top:17px}
+.mpm-picker-actions button{flex:1;min-height:48px;border-radius:13px;font-weight:800}
+.mpm-picker-cancel{border:1px solid #344338;background:#151e17;color:#dce8dc}
+.mpm-picker-confirm{border:0;background:linear-gradient(110deg,#b7ff83,#8bdc54);color:#10170d}
+@media(min-width:761px){.mpm-picker-backdrop{align-items:center}.mpm-picker{border-radius:22px}}
+
 </style>
 </head>
 <body>
@@ -1348,6 +1375,76 @@ if(LOCAL_DEMO_MODE){
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(error=>console.warn('MPMFIT: no se pudo registrar el modo instalable',error)));
 }
+</script>
+<script>
+/* Branded pickers for Android/mobile: native controls remain the data source. */
+(()=>{
+ const mobile=()=>window.matchMedia('(max-width: 760px)').matches;
+ const locale=()=>typeof getMPMFITLocale==='function'?getMPMFITLocale():(document.documentElement.lang||'es-ES');
+ let overlay=null, activeInput=null, pickedDate=null, shownMonth=null;
+ const close=()=>{if(overlay){overlay.remove();overlay=null;}activeInput=null;};
+ const shell=(title)=>{
+  close();overlay=document.createElement('div');overlay.className='mpm-picker-backdrop';
+  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+  const panel=document.createElement('div');panel.className='mpm-picker';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
+  const head=document.createElement('div');head.className='mpm-picker-head';
+  const h=document.createElement('div');h.className='mpm-picker-title';h.textContent=title;
+  const x=document.createElement('button');x.type='button';x.className='mpm-picker-close';x.textContent='×';x.setAttribute('aria-label','Cerrar');x.onclick=close;
+  head.append(h,x);panel.append(head);overlay.append(panel);document.body.append(overlay);return panel;
+ };
+ const dateString=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+ const fromString=v=>{if(!v)return new Date();const a=v.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
+ const openSelect=el=>{
+  activeInput=el;const panel=shell(el.getAttribute('aria-label')||el.closest('.field')?.querySelector('label')?.textContent||'Selecciona una opción');
+  const list=document.createElement('div');list.className='mpm-option-list';
+  [...el.options].forEach(opt=>{
+   if(opt.disabled&&opt.value==='')return;
+   const b=document.createElement('button');b.type='button';b.className='mpm-option'+(opt.value===el.value?' selected':'');
+   const label=document.createElement('span');label.textContent=opt.textContent.trim();b.append(label);
+   if(opt.value===el.value){const tick=document.createElement('span');tick.className='mpm-option-check';tick.textContent='✓';b.append(tick);}
+   b.onclick=()=>{el.value=opt.value;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));close();};list.append(b);
+  });
+  panel.append(list);
+ };
+ const renderCalendar=()=>{
+  if(!overlay||!activeInput)return;
+  const panel=overlay.querySelector('.mpm-picker');panel.querySelectorAll('.mpm-calendar-nav,.mpm-calendar-grid,.mpm-picker-actions').forEach(n=>n.remove());
+  const nav=document.createElement('div');nav.className='mpm-calendar-nav';
+  const prev=document.createElement('button');prev.type='button';prev.textContent='‹';prev.setAttribute('aria-label','Mes anterior');
+  const next=document.createElement('button');next.type='button';next.textContent='›';next.setAttribute('aria-label','Mes siguiente');
+  const month=document.createElement('div');month.className='mpm-calendar-month';month.textContent=new Intl.DateTimeFormat(locale(),{month:'long',year:'numeric'}).format(shownMonth);
+  prev.onclick=()=>{shownMonth=new Date(shownMonth.getFullYear(),shownMonth.getMonth()-1,1);renderCalendar();};
+  next.onclick=()=>{shownMonth=new Date(shownMonth.getFullYear(),shownMonth.getMonth()+1,1);renderCalendar();};
+  nav.append(prev,month,next);panel.append(nav);
+  const grid=document.createElement('div');grid.className='mpm-calendar-grid';
+  const monday=['L','M','X','J','V','S','D'];monday.forEach((v,i)=>{const d=document.createElement('div');d.className='mpm-calendar-weekday';d.textContent=new Intl.DateTimeFormat(locale(),{weekday:'short'}).format(new Date(2024,0,1+i)).slice(0,2);grid.append(d);});
+  const first=new Date(shownMonth.getFullYear(),shownMonth.getMonth(),1);const offset=(first.getDay()+6)%7;const count=new Date(shownMonth.getFullYear(),shownMonth.getMonth()+1,0).getDate();
+  for(let i=0;i<offset;i++){const blank=document.createElement('div');grid.append(blank);}
+  const today=dateString(new Date()),min=activeInput.min?fromString(activeInput.min):null,max=activeInput.max?fromString(activeInput.max):null;
+  for(let day=1;day<=count;day++){
+   const d=new Date(shownMonth.getFullYear(),shownMonth.getMonth(),day),key=dateString(d),b=document.createElement('button');b.type='button';b.className='mpm-calendar-day'+(key===today?' today':'')+(key===dateString(pickedDate)?' selected':'');b.textContent=day;
+   if((min&&d<new Date(min.getFullYear(),min.getMonth(),min.getDate()))||(max&&d>new Date(max.getFullYear(),max.getMonth(),max.getDate())))b.disabled=true;
+   b.onclick=()=>{pickedDate=d;renderCalendar();};grid.append(b);
+  }
+  panel.append(grid);
+  const actions=document.createElement('div');actions.className='mpm-picker-actions';
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='mpm-picker-cancel';cancel.textContent='Cancelar';cancel.onclick=close;
+  const confirm=document.createElement('button');confirm.type='button';confirm.className='mpm-picker-confirm';confirm.textContent='Confirmar';confirm.onclick=()=>{activeInput.value=dateString(pickedDate);activeInput.dispatchEvent(new Event('input',{bubbles:true}));activeInput.dispatchEvent(new Event('change',{bubbles:true}));close();};
+  actions.append(cancel,confirm);panel.append(actions);
+ };
+ const openDate=el=>{
+  activeInput=el;pickedDate=fromString(el.value);shownMonth=new Date(pickedDate.getFullYear(),pickedDate.getMonth(),1);
+  const panel=shell(el.closest('.field')?.querySelector('label')?.textContent||'Selecciona una fecha');renderCalendar();
+ };
+ document.addEventListener('click',e=>{
+  if(!mobile())return;
+  const select=e.target.closest('select');
+  if(select){e.preventDefault();e.stopImmediatePropagation();openSelect(select);return;}
+  const date=e.target.closest('input[type="date"]');
+  if(date){e.preventDefault();e.stopImmediatePropagation();openDate(date);}
+ },true);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay)close();});
+})();
 </script>
 </body>
 </html>
