@@ -1220,7 +1220,7 @@ function renderHome(){
  const last=db.sessions[0],lastBox=document.getElementById('lastSession');
  if(last){
   const volume=last.exercises.reduce((sum,e)=>sum+e.sets.reduce((a,x)=>a+(Number(x.weight)||0)*(Number(x.reps)||0),0),0);
-  lastBox.innerHTML='<div class="home-last-name">'+esc(last.routine)+'</div><div class="home-last-date">'+new Date(last.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})+'</div><div class="home-last-metrics"><span><b>'+last.exercises.length+'</b> ejercicios</span><span><b>'+Math.round(volume).toLocaleString('es-ES')+'</b> kg vol.</span></div>';
+  lastBox.innerHTML='<div class="home-last-name">'+esc(last.routine)+'</div><div class="home-last-date">'+new Date(last.date+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})+'</div><div class="home-last-metrics"><span><b>'+last.exercises.length+'</b> ejercicios</span><span><b>'+Math.round(volume).toLocaleString('es-ES')+'</b> '+getMPMFITPreference('mass')+' vol.</span></div>';
  }else{
   lastBox.innerHTML='<div class="home-nutrition-empty">Todavía no hay sesiones. Tu primer entrenamiento aparecerá aquí.</div>';
  }
