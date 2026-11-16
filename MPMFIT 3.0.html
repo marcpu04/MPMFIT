@@ -773,7 +773,18 @@ input,textarea,[contenteditable="true"],.selectable-text{-webkit-user-select:tex
 </section>
 <section id="settings" class="view">
  <div class="heading"><div><div class="eyebrow">PERSONALIZA MPMFIT</div><h1>Ajustes</h1><div class="muted">Tu cuenta, tus datos y las preferencias de la aplicación.</div></div></div>
- <div class="settings-grid">
+ <article class="card settings-card settings-preferences">
+   <div class="settings-card-icon">⚙</div>
+   <div class="settings-card-copy"><div class="eyebrow" data-i18n="preferences">PREFERENCIAS</div><h2 data-i18n="appPreferences">Idioma y unidades</h2><p class="muted" data-i18n="preferencesHelp">Personaliza cómo se muestran los textos y las medidas.</p></div>
+   <div class="formgrid preference-grid">
+    <div class="field"><label for="prefLanguage" data-i18n="language">Idioma</label><select id="prefLanguage" onchange="updateAppPreference('language',this.value)"><option value="es">Español</option><option value="en">English</option><option value="ca">Català</option></select></div>
+    <div class="field"><label for="prefMass" data-i18n="mass">Peso</label><select id="prefMass" onchange="updateAppPreference('mass',this.value)"><option value="kg">Kilogramos (kg)</option><option value="lb">Libras (lb)</option></select></div>
+    <div class="field"><label for="prefLength" data-i18n="length">Longitud</label><select id="prefLength" onchange="updateAppPreference('length',this.value)"><option value="cm">Centímetros (cm)</option><option value="in">Pulgadas (in)</option></select></div>
+    <div class="field"><label for="prefDistance" data-i18n="distance">Distancia</label><select id="prefDistance" onchange="updateAppPreference('distance',this.value)"><option value="km">Kilómetros (km)</option><option value="mi">Millas (mi)</option></select></div>
+   </div>
+   <p class="hint" id="preferencesStatus" data-i18n="preferencesSaved">Los cambios se guardan en tu cuenta cuando has iniciado sesión.</p>
+  </article>
+<div class="settings-grid">
   <article class="card settings-card">
    <div class="settings-card-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0 M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/></svg></div>
    <div class="settings-card-copy"><div class="eyebrow">CUENTA</div><h2>Acceso y sincronización</h2><p class="muted">Inicia sesión para mantener tus datos sincronizados o cierra la sesión de este dispositivo.</p></div>
@@ -836,11 +847,38 @@ function addPendingDelete(table,id){if(!id)return;const pending=loadPendingDelet
 function setSyncStatus(message){const el=document.getElementById('syncStatus');if(el)el.textContent=message}
 function setAuthMessage(message){const el=document.getElementById('authMessage');if(el)el.textContent=message}
 function openAccount(){if(currentUser){if(confirm('¿Quieres cerrar sesión en este dispositivo?'))supabaseClient.auth.signOut()}else{document.getElementById('authGate').style.display='flex'}}
-function renderSettings(){const button=document.getElementById('accountButton');if(button){button.textContent=currentUser?'Cerrar sesión':'Iniciar sesión';button.classList.toggle('danger',!!currentUser);button.classList.toggle('secondary',!currentUser)}}
+
+const MPMFIT_PREF_DEFAULTS={language:'es',mass:'kg',length:'cm',distance:'km'};
+let mpmfitPreferences={...MPMFIT_PREF_DEFAULTS};
+const MPMFIT_I18N={
+ es:{preferences:'PREFERENCIAS',appPreferences:'Idioma y unidades',preferencesHelp:'Personaliza cómo se muestran los textos y las medidas.',language:'Idioma',mass:'Peso',length:'Longitud',distance:'Distancia',preferencesSaved:'Los cambios se guardan en tu cuenta cuando has iniciado sesión.'},
+ en:{preferences:'PREFERENCES',appPreferences:'Language and units',preferencesHelp:'Choose how text and measurements are displayed.',language:'Language',mass:'Weight',length:'Length',distance:'Distance',preferencesSaved:'Changes are saved to your account when you are signed in.'},
+ ca:{preferences:'PREFERÈNCIES',appPreferences:'Idioma i unitats',preferencesHelp:'Personalitza com es mostren els textos i les mesures.',language:'Idioma',mass:'Pes',length:'Longitud',distance:'Distància',preferencesSaved:'Els canvis es desen al teu compte quan has iniciat sessió.'}
+};
+function getMPMFITPreference(key){return mpmfitPreferences[key]||MPMFIT_PREF_DEFAULTS[key]}
+function formatAppMass(kg,digits=1){const v=Number(kg)||0;return (getMPMFITPreference('mass')==='lb'?v*2.2046226218:v).toFixed(digits)+' '+getMPMFITPreference('mass')}
+function appMassToKg(value){const v=Number(String(value).replace(',','.'));return getMPMFITPreference('mass')==='lb'?v/2.2046226218:v}
+function formatAppLength(cm,digits=1){const v=Number(cm)||0;return (getMPMFITPreference('length')==='in'?v/2.54:v).toFixed(digits)+' '+getMPMFITPreference('length')}
+function applyMPMFITLanguage(){const lang=getMPMFITPreference('language'),dict=MPMFIT_I18N[lang]||MPMFIT_I18N.es;document.documentElement.lang=lang;document.querySelectorAll('[data-i18n]').forEach(el=>{if(dict[el.dataset.i18n])el.textContent=dict[el.dataset.i18n]})}
+async function loadMPMFITPreferences(){
+ mpmfitPreferences={...MPMFIT_PREF_DEFAULTS};
+ if(currentUser&&typeof supabaseClient!=='undefined'){try{const {data,error}=await supabaseClient.from('user_app_state').select('preferences').eq('user_id',currentUser.id).maybeSingle();if(!error&&data?.preferences)mpmfitPreferences={...mpmfitPreferences,...data.preferences}}catch(e){console.warn('Preferences load:',e)}}
+ try{const local=JSON.parse(localStorage.getItem('mpmfit_preferences_'+(currentUser?.id||'guest'))||'{}');mpmfitPreferences={...local,...mpmfitPreferences}}catch(e){}
+ ['language','mass','length','distance'].forEach(k=>{const el=document.getElementById('pref'+k[0].toUpperCase()+k.slice(1));if(el)el.value=getMPMFITPreference(k)});
+ applyMPMFITLanguage();
+}
+async function updateAppPreference(key,value){
+ if(!Object.hasOwn(MPMFIT_PREF_DEFAULTS,key))return;
+ mpmfitPreferences[key]=value;localStorage.setItem('mpmfit_preferences_'+(currentUser?.id||'guest'),JSON.stringify(mpmfitPreferences));applyMPMFITLanguage();
+ if(currentUser&&typeof supabaseClient!=='undefined'){const {error}=await supabaseClient.from('user_app_state').upsert({user_id:currentUser.id,preferences:mpmfitPreferences},{onConflict:'user_id'});const status=document.getElementById('preferencesStatus');if(status)status.textContent=error?'No se ha podido sincronizar; queda guardado en este dispositivo.':'Preferencias sincronizadas con tu cuenta.';if(error)console.error('Preferences sync:',error)}
+ if(typeof renderTraining==='function'&&document.getElementById('train'))renderTraining();
+ if(typeof renderBodyWeight==='function')renderBodyWeight();if(typeof renderBodyMeasurements==='function')renderBodyMeasurements();if(typeof renderBodyWeightGoal==='function')renderBodyWeightGoal();
+}
+function renderSettings(){loadMPMFITPreferences();const button=document.getElementById('accountButton');if(button){button.textContent=currentUser?'Cerrar sesión':'Iniciar sesión';button.classList.toggle('danger',!!currentUser);button.classList.toggle('secondary',!currentUser)}}
 async function signUp(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||password.length<6)return setAuthMessage('Introduce un correo válido y una contraseña de al menos 6 caracteres.');setAuthMessage('Creando cuenta…');const {error}=await supabaseClient.auth.signUp({email,password});if(error){setAuthMessage(error.message);return}setAuthMessage('Cuenta creada. Si Supabase te pide confirmar el correo, revisa tu bandeja de entrada y después inicia sesión.')}
 async function signIn(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||!password)return setAuthMessage('Introduce tu correo y contraseña.');setAuthMessage('Iniciando sesión…');const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error){setAuthMessage(error.message);return}await activateUser(data.user)}
 async function activateUser(user){
- currentUser=user;cloudReady=false;document.getElementById('authGate').style.display='none';
+ currentUser=user;cloudReady=false;document.getElementById('authGate').style.display='none';await loadMPMFITPreferences();
  document.getElementById('accountButton').textContent='Cerrar sesión';setSyncStatus('● CONECTANDO…');
  try{
   const accountKey=ACCOUNT_KEY_PREFIX+user.id;
