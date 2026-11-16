@@ -492,6 +492,46 @@ textarea{resize:vertical;min-height:88px}
 .field{min-width:0}.field>input,.field>select,.field>textarea{width:100%}
 .modal{box-shadow:0 24px 80px #0009}.modal .field{gap:7px}.modal .field label{font-size:12px;font-weight:650;letter-spacing:.1px}.modalactions .btn,.modalactions button{min-height:42px}
 @media(max-width:760px){input,select,textarea{font-size:16px;min-height:46px}input[type=checkbox],input[type=radio]{width:20px;height:20px;min-height:0}.modalback{align-items:flex-end;padding:10px}.modal{width:100%;max-height:min(88vh,760px);border-radius:20px 20px 15px 15px;padding:19px 16px calc(18px + env(safe-area-inset-bottom));border-bottom:0}.modalactions{position:sticky;bottom:-19px;background:linear-gradient(180deg,rgba(21,28,23,0),#151c17 18%);padding:16px 0 3px;margin-top:18px}.formgrid{gap:12px}}
+
+/* MPMFIT — selector de fotos con acabado propio */
+#progressPhotoFile{
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:54px;
+  padding:6px;
+  border:1px dashed rgba(155,230,107,.42);
+  border-radius:13px;
+  background:linear-gradient(145deg,#111a13,#0e140f);
+  color:#aebcaf;
+  font-size:13px;
+  line-height:1.4;
+  cursor:pointer;
+}
+#progressPhotoFile::file-selector-button{
+  min-height:40px;
+  margin:0 10px 0 0;
+  padding:9px 13px;
+  border:1px solid rgba(155,230,107,.38);
+  border-radius:9px;
+  background:#263925;
+  color:var(--green2);
+  font:700 13px/1.2 inherit;
+  cursor:pointer;
+  transition:background .18s ease,border-color .18s ease;
+}
+#progressPhotoFile::file-selector-button:hover{
+  background:#304a2d;
+  border-color:var(--green);
+}
+#progressPhotoFile:focus-visible{
+  outline:2px solid var(--green);
+  outline-offset:3px;
+}
+@media(max-width:760px){
+  #progressPhotoFile{min-height:58px;padding:7px;font-size:12px}
+  #progressPhotoFile::file-selector-button{min-height:42px;padding:10px 12px;margin-right:8px}
+}
 </style>
 </head>
 <body>
