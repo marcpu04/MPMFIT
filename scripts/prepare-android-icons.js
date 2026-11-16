@@ -14,7 +14,7 @@ const foreground = [
   '    <path android:fillColor="#9BE66B" android:pathData="M104,365V147l102,76 51,39 49,-47 102,-87v91l-99,84 -52,40 -54,-40 -30,-23v85z"/>',
   '    <path android:fillColor="#0B0E0C" android:pathData="m255,262 102,-96h54L255,316l-78,-59v-67z"/>',
   '</vector>'
-].join('\\n') + '\\n';
+].join('\n') + '\n';
 const adaptive = [
   '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">',
   '    <background android:drawable="@color/ic_launcher_background"/>',
